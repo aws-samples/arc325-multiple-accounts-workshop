@@ -1,0 +1,22 @@
+[
+  {
+      "ParameterKey": "Endpoint",
+      "ParameterValue": "search-lz-logging-domain-mpwtk4v2wncp2sygjnfyockgza.eu-west-1.es.amazonaws.com"
+  },
+  {
+      "ParameterKey": "MainVPCId",
+      "ParameterValue": "vpc-a33214c4"
+  },
+  {
+      "ParameterKey": "2ndVPCID",
+      "ParameterValue": ""
+  },
+  {
+      "ParameterKey": "3rdVPCID",
+      "ParameterValue": ""
+  },
+  {
+      "ParameterKey": "4thVPCID",
+      "ParameterValue": ""
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+      "ParameterKey": "AccessLinksBucket",
+      "ParameterValue": "lz-cross-account-manager-access-links-ppa"
+  },
+  {
+    "ParameterKey": "ConfigBucket",
+    "ParameterValue": "lz-cross-account-manager-config-ppa"
+  },
+  {
+    "ParameterKey": "SendAnonymousData",
+    "ParameterValue": "No"
+  }
+]

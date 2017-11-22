@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudTrail Baseline
+Parameters:
+    pNotifyEmail:
+        Description: Notification email for security events
+        Type: String
+        Default: ''
+    pSupportsGlacier:
+        Description: Determines hether this region supports Glacier (passed in from Main template)
+        Type: String
+        Default: true
+    pCloudTrailBucketName:
+        Description: Existing S3 bucket in the central logging account to which you have access
+        Type: String
+        Default: loggingbuckets-rcloudtrailbucket-examplebucketname
+Conditions:
+    IsGovCloud: !Equals [ us-gov-west-1, !Ref 'AWS::Region' ]
+    SupportsGlacier: !Equals [ true, !Ref pSupportsGlacier ]
+Resources:
+    rSecurityAlarmTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            Subscription:
+              - Endpoint: !Ref pNotifyEmail
+                Protocol: email
+    rCloudTrailLoggingLocal:
+        Type: AWS::CloudTrail::Trail
+        Properties:
+            S3BucketName: !Ref pCloudTrailBucketName
+            IsLogging: true
+            EnableLogFileValidation: true
+            IncludeGlobalServiceEvents: true
+            IsMultiRegionTrail: true
+            CloudWatchLogsLogGroupArn: !GetAtt [ rCloudTrailLogGroup, Arn ]
+            CloudWatchLogsRoleArn: !GetAtt [ rCloudWatchLogsRole, Arn ]
+    rCloudWatchLogsRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                        Service:
+                          - cloudtrail.amazonaws.com
+                    Action:
+                      - sts:AssumeRole
+            Path: /
+            Policies:
+              - PolicyName: cloudwatchlogsrole
+                PolicyDocument:
+                    Version: 2012-10-17
+                    Statement:
+                      - Sid: AWSCloudTrailCreateLogStream20141101
+                        Effect: Allow
+                        Action:
+                          - logs:CreateLogStream
+                        Resource: !Sub
+                          - arn:${Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${rCloudTrailLogGroup}:log-stream:*
+                          - { Partition: !If [ IsGovCloud, aws-us-gov, aws ] }
+                      - Sid: AWSCloudTrailPutLogEvents20141101
+                        Effect: Allow
+                        Action:
+                          - logs:PutLogEvents
+                        Resource: !Sub
+                          - arn:${Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${rCloudTrailLogGroup}:log-stream:*
+                          - { Partition: !If [ IsGovCloud, aws-us-gov, aws ] }
+    rCloudTrailRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                        Service:
+                          - ec2.amazonaws.com
+                    Action:
+                      - sts:AssumeRole
+            Path: /
+            Policies:
+              - PolicyName: cloudtrail-limited-actions
+                PolicyDocument:
+                    Version: 2012-10-17
+                    Statement:
+                      - Effect: Allow
+                        Action:
+                          - s3:ListBucket
+                        Resource: !Sub
+                          - arn:${Partition}:s3:::${pCloudTrailBucketName}
+                          - { Partition: !If [ IsGovCloud, aws-us-gov, aws ] }
+                      - Effect: Allow
+                        Action:
+                          - s3:PutObject
+                          - s3:GetObject
+                        Resource: !Sub
+                          - arn:${Partition}:s3:::${pCloudTrailBucketName}/*
+                          - { Partition: !If [ IsGovCloud, aws-us-gov, aws ] }
+    rCloudTrailProfile:
+        Type: AWS::IAM::InstanceProfile
+        DependsOn: rCloudTrailRole
+        Properties:
+            Path: /
+            Roles:
+              - !Ref rCloudTrailRole
+    rCloudTrailLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            RetentionInDays: 90
+    rIAMPolicyChangesMetricFilter:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: IAMPolicyEventCount
+                MetricValue: 1
+    rNetworkAclChangesMetricFilter:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: NetworkAclEventCount
+                MetricValue: 1
+    rNetworkAclChangesAlarm:
+        Type: AWS::CloudWatch::Alarm
+        Properties:
+            AlarmDescription: Alarms when an API call is made to create, update or delete a Network ACL.
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: NetworkAclEventCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rSecurityGroupChangesMetricFilter:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: SecurityGroupEventCount
+                MetricValue: 1
+    rSecurityGroupChangesAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rNetworkAclChangesAlarm
+        Properties:
+            AlarmDescription: Alarms when an API call is made to create, update or delete a Security Group.
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: SecurityGroupEventCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rIAMRootActivity:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{ $.userIdentity.type = "Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != "AwsServiceEvent" }'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: RootUserPolicyEventCount
+                MetricValue: 1
+    rRootActivityAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rSecurityGroupChangesAlarm
+        Properties:
+            AlarmDescription: Root user activity detected!
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: RootUserPolicyEventCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rUnauthorizedAttempts:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{($.errorCode=AccessDenied)||($.errorCode=UnauthorizedOperation)}'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: UnauthorizedAttemptCount
+                MetricValue: 1
+    rUnauthorizedAttemptAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rRootActivityAlarm
+        Properties:
+            AlarmDescription: Multiple unauthorized actions or logins attempted!
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: UnauthorizedAttemptCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 5
+    rIAMPolicyChangesAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rUnauthorizedAttemptAlarm
+        Properties:
+            AlarmDescription: IAM Configuration changes detected!
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: IAMPolicyEventCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rIAMCreateAccessKeyAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rIAMPolicyChangesAlarm
+        Properties:
+            AlarmDescription: 'Warning: New IAM access key was created. Please be sure this action was neccessary.'
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: NewAccessKeyCreated
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rIAMCreateAccessKey:
+        Type: AWS::Logs::MetricFilter
+        DependsOn: rIAMCreateAccessKeyAlarm
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{($.eventName=CreateAccessKey)}'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: NewAccessKeyCreated
+                MetricValue: 1
+    rCloudTrailChangeAlarm:
+        Type: AWS::CloudWatch::Alarm
+        DependsOn: rIAMCreateAccessKeyAlarm
+        Properties:
+            AlarmDescription: 'Warning: Changes to CloudTrail log configuration detected in this account'
+            AlarmActions:
+              - !Ref rSecurityAlarmTopic
+            MetricName: CloudTrailChangeCount
+            Namespace: CloudTrailMetrics
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            EvaluationPeriods: 1
+            Period: 300
+            Statistic: Sum
+            Threshold: 1
+    rCloudTrailChange:
+        Type: AWS::Logs::MetricFilter
+        Properties:
+            LogGroupName: !Ref rCloudTrailLogGroup
+            FilterPattern: '{($.eventSource = cloudtrail.amazonaws.com) && (($.eventName != Describe*) && ($.eventName != Get*) && ($.eventName != Lookup*) && ($.eventName != Lookup*))}'
+            MetricTransformations:
+              - MetricNamespace: CloudTrailMetrics
+                MetricName: CloudTrailChangeCount
+                MetricValue: 1
+
+Outputs:
+    rSecurityAlarmTopic:
+        Value: !Ref rSecurityAlarmTopic
+    rCloudTrailLogGroup:
+        Value: !Ref rCloudTrailLogGroup

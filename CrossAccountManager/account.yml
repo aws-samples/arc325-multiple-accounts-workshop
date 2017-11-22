@@ -1,0 +1,16 @@
+accounts:
+  -
+    # AWS Account ID
+    # Billing Account
+    123456789012 :
+        # Email associated with the account
+        email : noreply+billing@example.com
+        # Optional to group the accounts
+        accountgroup : billing
+    # Security
+    987654321098 :
+        email : noreply+lzsec@example.com
+    # AppOne
+    654321987098 :
+        email: noreply+lzapp1@example.com
+        accountgroup : devops

@@ -1,0 +1,1235 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  SendData:
+    Fn::Equals:
+    - Ref: SendAnonymousData
+    - 'Yes'
+  SizeLarge:
+    Fn::Equals:
+    - Ref: ClusterSize
+    - Large
+  SizeMedium:
+    Fn::Equals:
+    - Ref: ClusterSize
+    - Medium
+  SizeSmall:
+    Fn::Equals:
+    - Ref: ClusterSize
+    - Small
+  VPCFlowLogsLogGroup:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: VPCFlowLogsLogGroup
+      - ''
+  CloudTrailLogGroup:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: CloudTrailLogGroup
+      - ''
+Description: (SO0009) - AWS Centralized Logging Solution
+Mappings:
+  FilterPatternLookup:
+    CloudTrail:
+      Pattern: ''
+    Common:
+      Pattern: '[host, ident, authuser, date, request, status, bytes, referrer, agent]'
+    FlowLogs:
+      Pattern: '[version, account_id, interface_id, srcaddr != "-", dstaddr != "-",
+        srcport != "-", dstport != "-", protocol, packets, bytes, start, end, action,
+        log_status]'
+    Lambda:
+      Pattern: '[timestamp=*Z, request_id="*-*", event]'
+    Other:
+      Pattern: ''
+    SpaceDelimited:
+      Pattern: '[]'
+  General:
+    CodeRepo:
+      S3BucketPrefix: rualda-solutions-dev-
+      S3KeyPrefix: landing-zone/latest
+  MasterSizing:
+    elasticsearch:
+      Large: m3.medium.elasticsearch
+      Medium: m3.medium.elasticsearch
+      Small: t2.small.elasticsearch
+  RegionMap:
+    ap-northeast-1:
+      AMI: ami-1a15c77b
+      S3URL: https://s3.amazonaws.com
+    ap-northeast-2:
+      AMI: ami-a04297ce
+      S3URL: https://s3.amazonaws.com
+    ap-south-1:
+      S3URL: https://s3.amazonaws.com
+    ap-southeast-1:
+      AMI: ami-7243e611
+      S3URL: https://s3.amazonaws.com
+    ap-southeast-2:
+      AMI: ami-55d4e436
+      S3URL: https://s3.amazonaws.com
+    ca-central-1:
+      S3URL: https://s3.amazonaws.com
+    eu-central-1:
+      AMI: ami-0044b96f
+      S3URL: https://s3.amazonaws.com
+    eu-west-1:
+      AMI: ami-d41d58a7
+      S3URL: https://s3.amazonaws.com
+    eu-west-2:
+      S3URL: https://s3.amazonaws.com
+    sa-east-1:
+      S3URL: https://s3.amazonaws.com
+    us-east-1:
+      AMI: ami-c481fad3
+      S3URL: https://s3.amazonaws.com
+    us-east-2:
+      S3URL: https://s3.amazonaws.com
+    us-gov-west-1:
+      Partition: aws-us-gov
+      S3URL: https://s3-us-gov-west-1.amazonaws.com
+    us-west-1:
+      S3URL: https://s3.amazonaws.com
+    us-west-2:
+      AMI: ami-b04e92d0
+      S3URL: https://s3.amazonaws.com
+  RegionServiceSupport:
+    ap-northeast-1:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    ap-northeast-2:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    ap-south-1:
+      ConfigRules: 'false'
+      Glacier: 'true'
+      NatGateway: 'true'
+    ap-southeast-1:
+      ConfigRules: 'true'
+      Glacier: 'false'
+      NatGateway: 'true'
+    ap-southeast-2:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    ca-central-1:
+      ConfigRules: 'false'
+      Glacier: 'true'
+      NatGateway: 'true'
+    eu-central-1:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    eu-west-1:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    eu-west-2:
+      ConfigRules: 'false'
+      Glacier: 'true'
+      NatGateway: 'true'
+    sa-east-1:
+      ConfigRules: 'false'
+      Glacier: 'false'
+      NatGateway: 'true'
+    us-east-1:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    us-east-2:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    us-gov-west-1:
+      ConfigRules: 'false'
+      Glacier: 'false'
+      NatGateway: 'false'
+    us-west-1:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+    us-west-2:
+      ConfigRules: 'true'
+      Glacier: 'true'
+      NatGateway: 'true'
+  instanceCount:
+    elasticsearch:
+      Large: '10'
+      Medium: '4'
+      Small: '2'
+  instanceSizing:
+    elasticsearch:
+      Large: r3.8xlarge.elasticsearch
+      Medium: r3.2xlarge.elasticsearch
+      Small: m3.large.elasticsearch
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Proxy Configuration
+      Parameters:
+      - ProxyUsername
+      - ProxyPass
+      - SSHLocation
+      - KeyName
+    - Label:
+        default: Amazon ES Domain Configuration
+      Parameters:
+      - DOMAINNAME
+      - ClusterSize
+    - Label:
+        default: Network Settings
+      Parameters:
+      - VPCCidrparameter
+      - Subnet1Cidrparameter
+      - Subnet2Cidrparameter
+    - Label:
+        default: Anonymous Metrics Request
+      Parameters:
+      - SendAnonymousData
+    ParameterLabels:
+      ClusterSize:
+        default: Cluster Size
+      DOMAINNAME:
+        default: Domain Name
+      KeyName:
+        default: SSH Key
+      ProxyPass:
+        default: Password
+      ProxyUsername:
+        default: User Name
+      SSHLocation:
+        default: Access CIDR block
+      SendAnonymousData:
+        default: Send Anonymous Usage Data
+      Subnet1Cidrparameter:
+        default: 1st Subnet Network
+      Subnet2Cidrparameter:
+        default: 2nd Subnet Network
+      VPCCidrparameter:
+        default: VPC CIDR block
+Outputs:
+  DomainEndpoint:
+    Description: URL of domain endpoint - for lambda function
+    Value:
+      Fn::GetAtt:
+      - ElasticsearchAWSLogs
+      - DomainEndpoint
+  KibanaURL:
+    Description: URL of the initial Kibana dashboard
+    Value:
+      Fn::Join:
+      - ''
+      -
+        - http://
+        - Fn::GetAtt:
+          - ELB
+          - DNSName
+        - /_plugin/kibana/
+Parameters:
+  CloudTrailLogGroup:
+    Description: CloudTrail Log group to retrieve logs from
+    Type: String
+  ClusterSize:
+    AllowedValues:
+    - Small
+    - Medium
+    - Large
+    Default: Small
+    Description: 'Amazon ES cluster size: small (2 data nodes), medium (4 data nodes),
+      large (6 data nodes)'
+    Type: String
+  DOMAINNAME:
+    Default: centralized-logging
+    Description: 'Name for the Amazon ES domain that this template will create.
+
+      Note: Domain names must start with a lowercase letter and must be between 3
+      and 28 characters. Valid characters are a-z (lowercase only), 0-9, and – (hyphen).'
+    Type: String
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Description: Existing Amazon EC2 key pair for SSH access to the proxy and web
+      servers
+    Type: AWS::EC2::KeyPair::KeyName
+  NotifyEmail:
+    Default: noreply@example.com
+    Description: Notification email for security events
+    Type: String
+  ProxyPass:
+    AllowedPattern: ^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=])(?=\S+$).{6,}$
+    ConstraintDescription: Must contain at least 1 Upper/Lower alphanumeric characters,
+      number and !@#$%& (Mininum lenght is 6)
+    Description: 'Password for dashboard access via the proxy server
+
+      Note: Must be six characters or longer, and must contain one uppercase letter,
+      one lower case letter, and a special character (!@#$%^&+)'
+    MaxLength: '41'
+    MinLength: '6'
+    NoEcho: 'true'
+    Type: String
+  ProxyUsername:
+    Description: User name for proxy server connection
+    Type: String
+  SSHLocation:
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Description: IP address range that can access the Nginx proxy server
+    MaxLength: '18'
+    MinLength: '9'
+    Type: String
+  SendAnonymousData:
+    AllowedValues:
+    - 'Yes'
+    - 'No'
+    Default: 'No'
+    Description: Anonymous Metrics Request
+    Type: String
+  Subnet1Cidrparameter:
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Default: 10.250.250.0/24
+    Description: IP address range for subnet created in AZ1
+    MaxLength: '18'
+    MinLength: '9'
+    Type: String
+  Subnet2Cidrparameter:
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Default: 10.250.249.0/24
+    Description: IP address range for subnet created in AZ2
+    MaxLength: '18'
+    MinLength: '9'
+    Type: String
+  VPCCidrparameter:
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Default: 10.250.0.0/16
+    Description: CIDR block for VPC
+    MaxLength: '18'
+    MinLength: '9'
+    Type: String
+  VPCFlowLogsLogGroup:
+    Description: VPC Flow Log group to capture from
+    Type: String
+Resources:
+  CreateUniqueID:
+    Properties:
+      CreateUniqueID: 'true'
+      Region:
+        Ref: AWS::Region
+      ServiceToken:
+        Fn::GetAtt:
+        - SolutionHelper
+        - Arn
+    Type: Custom::LoadLambda
+  ELB:
+    Properties:
+      CrossZone: 'true'
+      HealthCheck:
+        HealthyThreshold: '3'
+        Interval: '30'
+        Target: TCP:80
+        Timeout: '5'
+        UnhealthyThreshold: '5'
+      Instances:
+      - Ref: ProxyServerHost
+      - Ref: ProxyServerBHost
+      Listeners:
+      - InstancePort: '80'
+        LoadBalancerPort: '80'
+        Protocol: HTTP
+      LoadBalancerName:
+        Fn::Join:
+        - ''
+        -
+          - central-logging-elb-
+          - Ref: AWS::Region
+      SecurityGroups:
+      - Fn::GetAtt:
+        - ELBSecurityGroup
+        - GroupId
+      Subnets:
+      - Ref: PublicSubnet
+      - Ref: PublicSubnetB
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+  ELBSecurityGroup:
+    Properties:
+      GroupDescription: ELB - Port 80 access
+      SecurityGroupIngress:
+      - CidrIp:
+          Ref: SSHLocation
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::SecurityGroup
+  ElasticsearchAWSLogs:
+    Properties:
+      AccessPolicies:
+        Statement:
+        - Action: es:*
+          Condition:
+            IpAddress:
+              aws:SourceIp:
+              - Ref: ProxyServerEIP
+              - Ref: ProxyServerBEIP
+          Effect: Allow
+          Principal:
+            AWS: '*'
+          Resource: '*'
+        Version: '2012-10-17'
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: 'true'
+      DomainName:
+        Ref: DOMAINNAME
+      EBSOptions:
+        Fn::If:
+        - SizeSmall
+        - EBSEnabled: true
+          Iops: 0
+          VolumeSize: 50
+          VolumeType: gp2
+        - Fn::If:
+          - SizeMedium
+          - EBSEnabled: false
+          - EBSEnabled: false
+      ElasticsearchClusterConfig:
+        DedicatedMasterCount: '3'
+        DedicatedMasterEnabled: 'true'
+        DedicatedMasterType:
+          Fn::FindInMap:
+          - MasterSizing
+          - elasticsearch
+          - Ref: ClusterSize
+        InstanceCount:
+          Fn::FindInMap:
+          - instanceCount
+          - elasticsearch
+          - Ref: ClusterSize
+        InstanceType:
+          Fn::FindInMap:
+          - instanceSizing
+          - elasticsearch
+          - Ref: ClusterSize
+        ZoneAwarenessEnabled: 'true'
+      ElasticsearchVersion: '2.3'
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: '1'
+    Type: AWS::Elasticsearch::Domain
+  GatewayToInternet:
+    Properties:
+      InternetGatewayId:
+        Ref: InternetGateway
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::VPCGatewayAttachment
+  InternetGateway:
+    Properties: {}
+    Type: AWS::EC2::InternetGateway
+  LambdaInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: LogStreamer
+      Principal:
+        Fn::Join:
+        - ''
+        -
+          - logs.
+          - Ref: AWS::Region
+          - .amazonaws.com
+      SourceAccount:
+        Ref: AWS::AccountId
+    Type: AWS::Lambda::Permission
+  LogGrouptoLambdaMappingCloudTrail:
+    Condition: CloudTrailLogGroup
+    DependsOn: LambdaInvokePermission
+    Properties:
+      DestinationArn:
+        Fn::GetAtt:
+        - LogStreamer
+        - Arn
+      FilterPattern:
+        Fn::FindInMap:
+        - FilterPatternLookup
+        - CloudTrail
+        - Pattern
+      LogGroupName:
+        Ref: CloudTrailLogGroup
+    Type: AWS::Logs::SubscriptionFilter
+  LogGrouptoLambdaMappingCloudwatchAgent:
+    DependsOn: LambdaInvokePermission
+    Properties:
+      DestinationArn:
+        Fn::GetAtt:
+        - LogStreamer
+        - Arn
+      FilterPattern:
+        Fn::FindInMap:
+        - FilterPatternLookup
+        - Common
+        - Pattern
+      LogGroupName:
+        Ref: WebServerLogGroup
+    Type: AWS::Logs::SubscriptionFilter
+  LogGrouptoLambdaMappingFlowLogs:
+    Condition: VPCFlowLogsLogGroup
+    DependsOn: LambdaInvokePermission
+    Properties:
+      DestinationArn:
+        Fn::GetAtt:
+        - LogStreamer
+        - Arn
+      FilterPattern:
+        Fn::FindInMap:
+        - FilterPatternLookup
+        - FlowLogs
+        - Pattern
+      LogGroupName:
+        Ref: VPCFlowLogsLogGroup
+    Type: AWS::Logs::SubscriptionFilter
+  LogRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:Create*
+            - logs:PutLogEvents
+            - s3:GetObject
+            Effect: Allow
+            Resource:
+            - arn:aws:logs:*:*:*
+            - arn:aws:s3:::*
+          Version: '2012-10-17'
+        PolicyName: LogRolePolicy
+    Type: AWS::IAM::Role
+  LogRoleInstanceProfile:
+    Properties:
+      Path: /
+      Roles:
+      - Ref: LogRole
+    Type: AWS::IAM::InstanceProfile
+  LogStreamer:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: centralized-logging/v1/centralizedLoggingDownload.zip
+      Description: Lambda function for moving log data to AES.
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+        - LogStreamerRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  LogStreamerRole:
+    Properties:
+      RoleName: LogStreamerRole
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:logs:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: AWS::AccountId
+                - :log-group:/aws/lambda/*
+          - Action:
+            - es:ESHttpPost
+            Effect: Allow
+            Resource: arn:aws:es:*:*:*
+          - Action:
+            - cloudformation:DescribeStacks
+            - Cloudformation:ListStackResources
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:cloudformation:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: AWS::AccountId
+                - '*'
+                - ''
+          Version: '2012-10-17'
+        PolicyName: My_Lambda_Function_Permissions
+    Type: AWS::IAM::Role
+  MyVPC:
+    Properties:
+      CidrBlock:
+        Ref: VPCCidrparameter
+      Tags:
+      - Key: Name
+        Value: centralized-logging VPC
+    Type: AWS::EC2::VPC
+  ProxyAlarm:
+    Properties:
+      AlarmActions:
+      - Fn::Join:
+        - ''
+        -
+          - 'arn:aws:automate:'
+          - Ref: AWS::Region
+          - :ec2:recover
+      AlarmDescription: Trigger a recovery when instance status check fails for 15
+        consecutive minutes.
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: ProxyServerHost
+      EvaluationPeriods: '15'
+      MetricName: StatusCheckFailed_System
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Minimum
+      Threshold: '0'
+    Type: AWS::CloudWatch::Alarm
+  ProxyBAlarm:
+    Properties:
+      AlarmActions:
+      - Fn::Join:
+        - ''
+        -
+          - 'arn:aws:automate:'
+          - Ref: AWS::Region
+          - :ec2:recover
+      AlarmDescription: Trigger a recovery when instance status check fails for 15
+        consecutive minutes.
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: ProxyServerBHost
+      EvaluationPeriods: '15'
+      MetricName: StatusCheckFailed_System
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Minimum
+      Threshold: '0'
+    Type: AWS::CloudWatch::Alarm
+  ProxyServerBEIP:
+    DependsOn: PublicSubnetBRouteTableAssociation
+    Properties:
+      Domain: vpc
+    Type: AWS::EC2::EIP
+  ProxyServerBEIPAssoc:
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - ProxyServerBEIP
+        - AllocationId
+      InstanceId:
+        Ref: ProxyServerBHost
+    Type: AWS::EC2::EIPAssociation
+  ProxyServerBHost:
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content:
+                Fn::Join:
+                - ''
+                -
+                  - "[main]\n"
+                  - "stack="
+                  - Ref: AWS::StackId
+                  - "\n"
+                  - "region="
+                  - Ref: AWS::Region
+                  - "\n"
+              group: root
+              mode: '000400'
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content:
+                Fn::Join:
+                - ''
+                -
+                  - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.ProxyServerBHost.Metadata.AWS::CloudFormation::Init\n"
+                  - "action=/opt/aws/bin/cfn-init -s "
+                  - Ref: AWS::StackId
+                  - " -r ProxyServerBHost "
+                  - " --region     "
+                  - Ref: AWS::Region
+                  - "\n"
+                  - "runas=root\n"
+            /etc/nginx/default.d/default.conf:
+              content:
+                Fn::Join:
+                - ''
+                -
+                  - "location / {\n"
+                  - "   auth_basic 'Restricted';\n"
+                  - "   auth_basic_user_file /etc/nginx/conf.d/kibana.htpasswd;\n"
+                  - "   proxy_pass_request_headers off;\n"
+                  - "   proxy_set_header Host $host;\n"
+                  - "   proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                  - "   proxy_pass https://"
+                  - Fn::GetAtt:
+                    - ElasticsearchAWSLogs
+                    - DomainEndpoint
+                  - ";\n"
+                  - "}\n"
+              group: root
+              mode: '000644'
+              owner: root
+          packages:
+            yum:
+              nginx: []
+          services:
+            sysvinit:
+              nginx:
+                enabled: 'true'
+      Comment: Install nginx
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - Ref: AWS::Region
+        - AMI
+      InstanceType: t2.micro
+      KeyName:
+        Ref: KeyName
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeleteOnTermination: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - Ref: ProxyServerSecurityGroup
+        SubnetId:
+          Ref: PublicSubnetB
+      Tags:
+      - Key: Name
+        Value: Proxy Server 2 centralized-logging
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          -
+            - "#!/bin/bash -xe\n"
+            - "# Get the latest CloudFormation package\n"
+            - "yum update -y aws-cfn-bootstrap\n"
+            - "# Start cfn-init\n"
+            - "/opt/aws/bin/cfn-init -s "
+            - Ref: AWS::StackId
+            - " -r ProxyServerBHost "
+            - " --region "
+            - Ref: AWS::Region
+            - " || error_exit 'Failed to run cfn-init'\n"
+            - "# Start up the cfn-hup daemon to listen for changes to the EC2 instance metadata\n"
+            - "/opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'\n"
+            - "# Create a new username/password for nginx\n"
+            - "printf "
+            - Ref: ProxyUsername
+            - ":`openssl passwd -apr1 "
+            - Ref: ProxyPass
+            - "` >> /etc/nginx/conf.d/kibana.htpasswd\n"
+            - "# Remove the default location from nginx config\n"
+            - "sed -ri '/location \\//,/.*\\}/d' /etc/nginx/nginx.conf\n"
+            - "service nginx restart\n"
+            - "# All done so signal success\n"
+            - "/opt/aws/bin/cfn-signal -e $? "
+            - "         --stack "
+            - Ref: AWS::StackName
+            - "         --resource ProxyServerBHost "
+            - "         --region "
+            - Ref: AWS::Region
+            - "\n"
+    Type: AWS::EC2::Instance
+  ProxyServerEIP:
+    DependsOn: PublicSubnetRouteTableAssociation
+    Properties:
+      Domain: vpc
+    Type: AWS::EC2::EIP
+  ProxyServerEIPAssoc:
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - ProxyServerEIP
+        - AllocationId
+      InstanceId:
+        Ref: ProxyServerHost
+    Type: AWS::EC2::EIPAssociation
+  ProxyServerHost:
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "[main]\n"
+                  - "stack="
+                  - Ref: AWS::StackId
+                  - "\n"
+                  - "region="
+                  - Ref: AWS::Region
+                  - "\n"
+              group: root
+              mode: '000400'
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.ProxyServerHost.Metadata.AWS::CloudFormation::Init\n"
+                  - "action=/opt/aws/bin/cfn-init -s "
+                  - Ref: AWS::StackId
+                  - " -r ProxyServerHost "
+                  - " --region     "
+                  - Ref: AWS::Region
+                  - "\n"
+                  - "runas=root\n"
+            /etc/nginx/default.d/default.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "location / {\n"
+                  - "   auth_basic 'Restricted';\n"
+                  - "   auth_basic_user_file /etc/nginx/conf.d/kibana.htpasswd;\n"
+                  - "   proxy_pass_request_headers off;\n"
+                  - "   proxy_set_header Host $host;\n"
+                  - "   proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                  - "   proxy_pass https://"
+                  - Fn::GetAtt:
+                    - ElasticsearchAWSLogs
+                    - DomainEndpoint
+                  - ";\n"
+                  - "}\n"
+              group: root
+              mode: '000644'
+              owner: root
+          packages:
+            yum:
+              nginx: []
+          services:
+            sysvinit:
+              nginx:
+                enabled: 'true'
+      Comment: Install nginx
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - Ref: AWS::Region
+        - AMI
+      InstanceType: t2.micro
+      KeyName:
+        Ref: KeyName
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeleteOnTermination: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - Ref: ProxyServerSecurityGroup
+        SubnetId:
+          Ref: PublicSubnet
+      Tags:
+      - Key: Name
+        Value: Proxy Server 1 centralized-logging
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ""
+          -
+            - "#!/bin/bash -xe\n"
+            - "# Get the latest CloudFormation package\n"
+            - "yum update -y aws-cfn-bootstrap\n"
+            - "# Start cfn-init\n"
+            - "/opt/aws/bin/cfn-init -s "
+            - Ref: AWS::StackId
+            - " -r ProxyServerHost "
+            - " --region "
+            - Ref: AWS::Region
+            - " || error_exit 'Failed to run cfn-init'\n"
+            - "# Start up the cfn-hup daemon to listen for changes to the EC2 instance metadata\n"
+            - "/opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'\n"
+            - "# Create a new username/password for nginx\n"
+            - "printf "
+            - Ref: ProxyUsername
+            - ":`openssl passwd -apr1 "
+            - Ref: ProxyPass
+            - "` >> /etc/nginx/conf.d/kibana.htpasswd\n"
+            - "# Remove the default location from nginx config\n"
+            - "sed -ri '/location \\//,/.*\\}/d' /etc/nginx/nginx.conf\n"
+            - "service nginx restart\n"
+            - "# All done so signal success\n"
+            - "/opt/aws/bin/cfn-signal -e $? "
+            - "         --stack "
+            - Ref: AWS::StackName
+            - "         --resource ProxyServerHost "
+            - "         --region "
+            - Ref: AWS::Region
+            - "\n"
+    Type: AWS::EC2::Instance
+  ProxyServerSecurityGroup:
+    Properties:
+      GroupDescription: Enable HTTP access via port 80
+      SecurityGroupIngress:
+      - CidrIp:
+          Ref: SSHLocation
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+      - FromPort: '80'
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - ELBSecurityGroup
+          - GroupId
+        ToPort: '80'
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::SecurityGroup
+  PublicRoute:
+    DependsOn: GatewayToInternet
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+      RouteTableId:
+        Ref: PublicRouteTable
+    Type: AWS::EC2::Route
+  PublicRouteTable:
+    Properties:
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::RouteTable
+  PublicSubnet:
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - '0'
+        - Fn::GetAZs: ''
+      CidrBlock:
+        Ref: Subnet1Cidrparameter
+      MapPublicIpOnLaunch: 'True'
+      Tags:
+      - Key: Name
+        Value: centralized-logging subnet
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::Subnet
+  PublicSubnetB:
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - '1'
+        - Fn::GetAZs: ''
+      CidrBlock:
+        Ref: Subnet2Cidrparameter
+      MapPublicIpOnLaunch: 'True'
+      Tags:
+      - Key: Name
+        Value: centralized-logging subnet
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::Subnet
+  PublicSubnetBRouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PublicSubnetB
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicSubnetRouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PublicSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  SendingAnonymousData:
+    Condition: SendData
+    Properties:
+      SendAnonymousData:
+        Fn::Join:
+        - ""
+        -
+          - "{ 'Solution' : '"
+          - "SO0009"
+          - "', "
+          - "'UUID' : '"
+          - Fn::GetAtt:
+            - CreateUniqueID
+            - UUID
+          - "', "
+          - "'Data': {"
+          - "'Size': '"
+          - Ref: ClusterSize
+          - "'"
+          - "}"
+          - "}"
+      ServiceToken:
+        Fn::GetAtt:
+        - SolutionHelper
+        - Arn
+    Type: Custom::LoadLambda
+  SolutionHelper:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: library/solution-helper/v3/solution-helper.zip
+      Description: This function creates a CloudFormation custom lambda resource that
+        writes parameters into DynamoDB table.
+      Handler: solution-helper.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - SolutionHelperRole
+        - Arn
+      Runtime: python2.7
+      Timeout: '120'
+    Type: AWS::Lambda::Function
+  SolutionHelperRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:logs:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: AWS::AccountId
+                - :log-group:/aws/lambda/*
+          Version: '2012-10-17'
+        PolicyName: Custom_Lambda_Loader_Permissions
+    Type: AWS::IAM::Role
+  WebServerLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      RetentionInDays: 7
+  WebServerHost:
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "[main]\n"
+                  - "stack="
+                  - Ref: AWS::StackId
+                  - "\n"
+                  - "region="
+                  - Ref: AWS::Region
+                  - "\n"
+              group: root
+              mode: '000400'
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.WebServerHost.Metadata.AWS::CloudFormation::Init\n"
+                  - "action=/opt/aws/bin/cfn-init -s "
+                  - Ref: AWS::StackId
+                  - " -r WebServerHost "
+                  - " --region     "
+                  - Ref: AWS::Region
+                  - "\n"
+                  - "runas=root\n"
+            /tmp/cwlogs/apacheaccess.conf:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "[general]\n"
+                  - "state_file= /var/awslogs/agent-state\n"
+                  - "[/var/log/httpd/access_log]\n"
+                  - "file = /var/log/httpd/access_log\n"
+                  - "log_group_name = "
+                  - Ref: WebServerLogGroup
+                  - "\n"
+                  - "log_stream_name = {instance_id}/apache.log\n"
+                  - "datetime_format = %d/%b/%Y:%H:%M:%S"
+              group: apache
+              mode: '000400'
+              owner: apache
+            /var/www/html/index.php:
+              content:
+                Fn::Join:
+                - ""
+                -
+                  - "<?php\n"
+                  - "echo '<h1>AWS CloudFormation sample PHP application</h1>';\n"
+                  - "?>\n"
+              group: apache
+              mode: '000644'
+              owner: apache
+          packages:
+            yum:
+              httpd: []
+              php: []
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+              sendmail:
+                enabled: 'false'
+                ensureRunning: 'false'
+      Comment: Install a simple PHP application
+    Properties:
+      IamInstanceProfile:
+        Ref: LogRoleInstanceProfile
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - Ref: AWS::Region
+        - AMI
+      InstanceType: t2.micro
+      KeyName:
+        Ref: KeyName
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeleteOnTermination: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - Ref: WebServerSecurityGroup
+        SubnetId:
+          Ref: PublicSubnet
+      Tags:
+      - Key: Name
+        Value: Web Server centralized-logging
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          -
+            - "#!/bin/bash -xe\n"
+            - "# Get the latest CloudFormation package\n"
+            - "yum update -y aws-cfn-bootstrap\n"
+            - "# Start cfn-init\n"
+            - "/opt/aws/bin/cfn-init -s "
+            - Ref: AWS::StackId
+            - " -r WebServerHost "
+            - " --region "
+            - Ref: AWS::Region
+            - " || error_exit 'Failed to run cfn-init'\n"
+            - "# Start up the cfn-hup daemon to listen for changes to the EC2 instance metadata\n"
+            - "/opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'\n"
+            - "# Get the CloudWatch Logs agent\n"
+            - "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n"
+            - "# Install the CloudWatch Logs agent\n"
+            - "python awslogs-agent-setup.py -n -r "
+            - Ref: AWS::Region
+            - " -c /tmp/cwlogs/apacheaccess.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n"
+            - "# pre-warm the apache logs\n"
+            - "curl 127.0.0.1\n"
+            - "curl 127.0.0.1/404\n"
+            - "# All done so signal success\n"
+            - "/opt/aws/bin/cfn-signal -e $? "
+            - "         --stack "
+            - Ref: AWS::StackName
+            - "         --resource WebServerHost "
+            - "         --region "
+            - Ref: AWS::Region
+            - ""
+    Type: AWS::EC2::Instance
+  WebServerSecurityGroup:
+    Properties:
+      GroupDescription: Enable HTTP access via port 80
+      SecurityGroupIngress:
+      - CidrIp:
+          Ref: SSHLocation
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+      VpcId:
+        Ref: MyVPC
+    Type: AWS::EC2::SecurityGroup
+  WebServerSecurityGroupIngress:
+    Properties:
+      FromPort: '80'
+      GroupId:
+        Fn::GetAtt:
+        - WebServerSecurityGroup
+        - GroupId
+      IpProtocol: tcp
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+        - ProxyServerSecurityGroup
+        - GroupId
+      ToPort: '80'
+    Type: AWS::EC2::SecurityGroupIngress

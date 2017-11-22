@@ -1,0 +1,892 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  GovCloudCondition:
+    Fn::Equals:
+    - Ref: AWS::Region
+    - us-gov-west-1
+Description: This template creates a VPC infrastructure for a multi-AZ, multi-tier deployment of a Windows based
+  Application infrastructure. It installs 2 Active Directory Domain Controllers into private subnets in separate
+  AZs inside a VPC and managed NAT gateways into the public subnet for each AZ. The   default Domain Administrator
+  password will be the one retrieved from the instance.  It also deploys a managed Microsoft AD Directory Service into
+  private subnets in separate AZ inside a VPC and managed NAT gateways into the public subnet for each AZ. The default
+  Domain Administrator user is 'admin'. **WARNING** This template creates Amazon EC2 Windows instance and related
+  resources. You will be billed for the AWS resources used if you create a stack from this template.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: AD on EC2 - Network Configuration
+      Parameters:
+      - AvailabilityZones
+      - VPCCIDR
+      - PrivateSubnet1CIDR
+      - PrivateSubnet2CIDR
+      - PublicSubnet1CIDR
+      - PublicSubnet2CIDR
+    - Label:
+        default: AD on EC2 - Amazon EC2 Configuration
+      Parameters:
+      - KeyPairName
+      - ADServer1InstanceType
+      - ADServer1NetBIOSName
+      - ADServer1PrivateIP
+      - ADServer2InstanceType
+      - ADServer2NetBIOSName
+      - ADServer2PrivateIP
+    - Label:
+        default: AD on EC2 - Microsoft Active Directory Configuration
+      Parameters:
+      - DomainDNSName
+      - DomainNetBIOSName
+      - RestoreModePassword
+      - DomainAdminUser
+      - DomainAdminPassword
+    - Label:
+        default: AD on DS - Network Configuration
+      Parameters:
+      - DSAvailabilityZones
+      - DSVPCCIDR
+      - DSPrivateSubnet1CIDR
+      - DSPrivateSubnet2CIDR
+      - DSPublicSubnet1CIDR
+      - DSPublicSubnet2CIDR
+      - DSRDGWCIDR
+    - Label:
+        default: AD on DS - Amazon EC2 Configuration
+      Parameters:
+      - DSKeyPairName
+      - DSRDGWInstanceType
+    - Label:
+        default: AD on DS - Microsoft Active Directory Configuration
+      Parameters:
+      - DSDomainDNSName
+      - DSDomainNetBIOSName
+      - DSDomainAdminPassword
+    - Label:
+        default: AD on DS - Microsoft Remote Desktop Gateway Configuration
+      Parameters:
+      - DSNumberOfRDGWHosts
+    - Label:
+        default: AWS Quick Start Configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
+    ParameterLabels:
+      ADServer1InstanceType:
+        default: Domain Controller 1 Instance Type
+      ADServer1NetBIOSName:
+        default: Domain Controller 1 NetBIOS Name
+      ADServer1PrivateIP:
+        default: Domain Controller 1 Private IP Address
+      ADServer2InstanceType:
+        default: Domain Controller 2 Instance Type
+      ADServer2NetBIOSName:
+        default: Domain Controller 2 NetBIOS Name
+      ADServer2PrivateIP:
+        default: Domain Controller 2 Private IP Address
+      AvailabilityZones:
+        default: Availability Zones
+      DomainAdminPassword:
+        default: Domain Admin Password
+      DomainAdminUser:
+        default: Domain Admin User Name
+      DomainDNSName:
+        default: Domain DNS Name
+      DomainNetBIOSName:
+        default: Domain NetBIOS Name
+      KeyPairName:
+        default: Key Pair Name
+      PrivateSubnet1CIDR:
+        default: Private Subnet 1 CIDR
+      PrivateSubnet2CIDR:
+        default: Private Subnet 2 CIDR
+      PublicSubnet1CIDR:
+        default: Public Subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public Subnet 2 CIDR
+      QSS3BucketName:
+        default: Quick Start S3 Bucket Name
+      QSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+      RestoreModePassword:
+        default: Restore Mode Password
+      VPCCIDR:
+        default: VPC CIDR
+      DSAvailabilityZones:
+        default: Availability Zones
+      DSDomainAdminPassword:
+        default: Domain Admin Password
+      DSDomainDNSName:
+        default: Domain DNS Name
+      DSDomainNetBIOSName:
+        default: Domain NetBIOS Name
+      DSKeyPairName:
+        default: Key Pair Name
+      DSNumberOfRDGWHosts:
+        default: Number of RDGW hosts
+      DSPrivateSubnet1CIDR:
+        default: Private Subnet 1 CIDR
+      DSPrivateSubnet2CIDR:
+        default: Private Subnet 2 CIDR
+      DSPublicSubnet1CIDR:
+        default: Public Subnet 1 CIDR
+      DSPublicSubnet2CIDR:
+        default: Public Subnet 2 CIDR
+      DSQSS3BucketName:
+        default: Quick Start S3 Bucket Name
+      DSQSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+      DSRDGWCIDR:
+        default: Allowed Remote Desktop Gateway External Access CIDR
+      DSRDGWInstanceType:
+        default: Remote Desktop Gateway Instance Type
+      DSVPCCIDR:
+        default: VPC CIDR
+Parameters:
+  ADServer1InstanceType:
+    AllowedValues:
+    - t2.large
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    Default: t2.large
+    Description: Amazon EC2 instance type for the first Active Directory instance
+    Type: String
+  ADServer1NetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Default: DC1
+    Description: NetBIOS name of the first Active Directory server (up to 15 characters)
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  ADServer1PrivateIP:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+    Default: 10.0.0.10
+    Description: Fixed private IP for the first Active Directory server located in
+      Availability Zone 1
+    Type: String
+  ADServer2InstanceType:
+    AllowedValues:
+    - t2.large
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    Default: t2.large
+    Description: Amazon EC2 instance type for the second Active Directory instance
+    Type: String
+  ADServer2NetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Default: DC2
+    Description: NetBIOS name of the second Active Directory server (up to 15 characters)
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  ADServer2PrivateIP:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+    Default: 10.0.32.10
+    Description: Fixed private IP for the second Active Directory server located in
+      Availability Zone 2
+    Type: String
+  AvailabilityZones:
+    Description: 'List of Availability Zones to use for the subnets in the VPC. Note:
+      The logical order is preserved and only 2 AZs are used for this deployment.'
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  DomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: '32'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: StackAdmin
+    Description: User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: '25'
+    MinLength: '5'
+    Type: String
+  DomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+\..+'
+    Default: landingzone.aws
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g.
+      example.com
+    MaxLength: '25'
+    MinLength: '3'
+    Type: String
+  DomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Default: landingzone
+    Description: NetBIOS name of the domain (up to 15 characters) for users of earlier
+      versions of Windows e.g. EXAMPLE
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  KeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  PrivateSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/19
+    Description: CIDR block for private subnet 1 located in Availability Zone 1.
+    Type: String
+  PrivateSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.32.0/19
+    Description: CIDR block for private subnet 2 located in Availability Zone 2.
+    Type: String
+  PublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.128.0/20
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone
+      1
+    Type: String
+  PublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.144.0/20
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone
+      2
+    Type: String
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: quickstart-reference
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: microsoft/activedirectory/latest/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+  RestoreModePassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: Password for a separate Administrator account when the domain controller
+      is in Restore Mode. Must be at least 8 characters containing letters, numbers
+      and symbols
+    MaxLength: '32'
+    MinLength: '8'
+    NoEcho: 'True'
+    Type: String
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+  DSAvailabilityZones:
+    Description: 'List of Availability Zones to use for the subnets in the VPC. Note:
+      The logical order is preserved and only 2 AZs are used for this deployment.'
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  DSDomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: '32'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DSDomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+\..+'
+    Default: example.com
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g.
+      example.com
+    MaxLength: '25'
+    MinLength: '3'
+    Type: String
+  DSDomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Default: example
+    Description: NetBIOS name of the domain (up to 15 characters) for users of earlier
+      versions of Windows e.g. EXAMPLE
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  DSKeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  DSNumberOfRDGWHosts:
+    AllowedValues:
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    Default: '1'
+    Description: Enter the number of Remote Desktop Gateway hosts to create
+    Type: String
+  DSPrivateSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/19
+    Description: CIDR block for private subnet 1 located in Availability Zone 1.
+    Type: String
+  DSPrivateSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.32.0/19
+    Description: CIDR block for private subnet 2 located in Availability Zone 2.
+    Type: String
+  DSPublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.128.0/20
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone
+      1
+    Type: String
+  DSPublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.144.0/20
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone
+      2
+    Type: String
+  DSRDGWCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: Allowed CIDR Block for external access to the Remote Desktop Gateways
+    Type: String
+  DSRDGWInstanceType:
+    AllowedValues:
+    - t2.large
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    Default: t2.large
+    Description: Amazon EC2 instance type for the Remote Desktop Gateway instances
+    Type: String
+  DSVPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+Resources:
+  ADStack:
+    DependsOn: VPCStack
+    Properties:
+      Parameters:
+        ADServer1InstanceType:
+          Ref: ADServer1InstanceType
+        ADServer1NetBIOSName:
+          Ref: ADServer1NetBIOSName
+        ADServer1PrivateIP:
+          Ref: ADServer1PrivateIP
+        ADServer2InstanceType:
+          Ref: ADServer2InstanceType
+        ADServer2NetBIOSName:
+          Ref: ADServer2NetBIOSName
+        ADServer2PrivateIP:
+          Ref: ADServer2PrivateIP
+        DomainAdminPassword:
+          Ref: DomainAdminPassword
+        DomainAdminUser:
+          Ref: DomainAdminUser
+        DomainDNSName:
+          Ref: DomainDNSName
+        DomainNetBIOSName:
+          Ref: DomainNetBIOSName
+        KeyPairName:
+          Ref: KeyPairName
+        PrivateSubnet1CIDR:
+          Ref: PrivateSubnet1CIDR
+        PrivateSubnet1ID:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.PrivateSubnet1AID
+        PrivateSubnet2CIDR:
+          Ref: PrivateSubnet2CIDR
+        PrivateSubnet2ID:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.PrivateSubnet2AID
+        PublicSubnet1CIDR:
+          Ref: PublicSubnet1CIDR
+        PublicSubnet2CIDR:
+          Ref: PublicSubnet2CIDR
+        QSS3BucketName:
+          Ref: QSS3BucketName
+        QSS3KeyPrefix:
+          Ref: QSS3KeyPrefix
+        RestoreModePassword:
+          Ref: RestoreModePassword
+        VPCCIDR:
+          Ref: VPCCIDR
+        VPCID:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.VPCID
+      TemplateURL:
+        Fn::Sub:
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/ad-2012r2-1.template
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+    Type: AWS::CloudFormation::Stack
+  VPCStack:
+    Properties:
+      Parameters:
+        AvailabilityZones:
+          Fn::Join:
+          - ','
+          - Ref: AvailabilityZones
+        KeyPairName:
+          Ref: KeyPairName
+        NumberOfAZs: '2'
+        PrivateSubnet1ACIDR:
+          Ref: PrivateSubnet1CIDR
+        PrivateSubnet2ACIDR:
+          Ref: PrivateSubnet2CIDR
+        PublicSubnet1CIDR:
+          Ref: PublicSubnet1CIDR
+        PublicSubnet2CIDR:
+          Ref: PublicSubnet2CIDR
+        VPCCIDR:
+          Ref: VPCCIDR
+      TemplateURL:
+        Fn::Sub:
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+    Type: AWS::CloudFormation::Stack
+  DSADStack:
+    DependsOn: DSVPCStack
+    Properties:
+      Parameters:
+        DomainAdminPassword:
+          Ref: DSDomainAdminPassword
+        DomainDNSName:
+          Ref: DSDomainDNSName
+        DomainNetBIOSName:
+          Ref: DSDomainNetBIOSName
+        PrivateSubnet1CIDR:
+          Ref: DSPrivateSubnet1CIDR
+        PrivateSubnet1ID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.PrivateSubnet1AID
+        PrivateSubnet2CIDR:
+          Ref: DSPrivateSubnet2CIDR
+        PrivateSubnet2ID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.PrivateSubnet2AID
+        PublicSubnet1CIDR:
+          Ref: DSPublicSubnet1CIDR
+        PublicSubnet2CIDR:
+          Ref: DSPublicSubnet2CIDR
+        QSS3BucketName:
+          Ref: QSS3BucketName
+        QSS3KeyPrefix:
+          Ref: QSS3KeyPrefix
+        VPCCIDR:
+          Ref: DSVPCCIDR
+        VPCID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.VPCID
+      TemplateURL:
+        Fn::Sub:
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/ad-2012r2-3.template
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+    Type: AWS::CloudFormation::Stack
+  DSRDGWStack:
+    DependsOn: DSADStack
+    Properties:
+      Parameters:
+        DomainAdminPassword:
+          Ref: DSDomainAdminPassword
+        DomainAdminUser: admin
+        DomainDNSName:
+          Ref: DSDomainDNSName
+        DomainMemberSGID:
+          Fn::GetAtt:
+          - DSADStack
+          - Outputs.DomainMemberSGID
+        DomainNetBIOSName:
+          Ref: DSDomainNetBIOSName
+        KeyPairName:
+          Ref: DSKeyPairName
+        NumberOfRDGWHosts:
+          Ref: DSNumberOfRDGWHosts
+        PublicSubnet1ID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.PublicSubnet1ID
+        PublicSubnet2ID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.PublicSubnet2ID
+        QSS3BucketName:
+          Ref: QSS3BucketName
+        QSS3KeyPrefix:
+          Fn::Sub: ${QSS3KeyPrefix}submodules/quickstart-microsoft-rdgateway/
+        RDGWCIDR:
+          Ref: DSRDGWCIDR
+        RDGWInstanceType:
+          Ref: DSRDGWInstanceType
+        VPCID:
+          Fn::GetAtt:
+          - DSVPCStack
+          - Outputs.VPCID
+      TemplateURL:
+        Fn::Sub:
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-rdgateway/templates/rdgw-domain.template
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+    Type: AWS::CloudFormation::Stack
+  DSVPCStack:
+    Properties:
+      Parameters:
+        AvailabilityZones:
+          Fn::Join:
+          - ','
+          - Ref: DSAvailabilityZones
+        KeyPairName:
+          Ref: DSKeyPairName
+        NumberOfAZs: '2'
+        PrivateSubnet1ACIDR:
+          Ref: DSPrivateSubnet1CIDR
+        PrivateSubnet2ACIDR:
+          Ref: DSPrivateSubnet2CIDR
+        PublicSubnet1CIDR:
+          Ref: DSPublicSubnet1CIDR
+        PublicSubnet2CIDR:
+          Ref: DSPublicSubnet2CIDR
+        VPCCIDR:
+          Ref: DSVPCCIDR
+      TemplateURL:
+        Fn::Sub:
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+    Type: AWS::CloudFormation::Stack
+  GetSGIDLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+          AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Principal:
+                  Service:
+                    - "lambda.amazonaws.com"
+                Action:
+                  - "sts:AssumeRole"
+          Path: /
+          Policies:
+              -
+                PolicyName:
+                  Fn::Sub: GetSGIDLambdaRole-${AWS::StackName}-Policy
+                PolicyDocument:
+                  Version: "2012-10-17"
+                  Statement:
+                    -
+                      Effect: "Allow"
+                      Action:
+                        - "logs:CreateLogGroup"
+                        - "logs:CreateLogStream"
+                        - "logs:PutLogEvents"
+                      Resource:
+                        - Fn::Sub: arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+                    -
+                      Effect: "Allow"
+                      Action:
+                        - "ec2:DescribeSecurityGroups"
+                      Resource:
+                        - "*"
+  GetSGIDLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "index.lambda_handler"
+      Role:
+        Fn::GetAtt:
+          - "GetSGIDLambdaRole"
+          - "Arn"
+      Code:
+        ZipFile: |
+          from botocore.vendored import requests
+          import json
+          import boto3
+          import traceback
+
+
+          def sendResponse(event, context, responseStatus, responseData):
+              responseBody = {'Status': responseStatus,
+                              'Reason': 'See the details in CloudWatch Log Stream: ' + context.log_stream_name,
+                              'PhysicalResourceId': context.log_stream_name,
+                              'StackId': event['StackId'],
+                              'RequestId': event['RequestId'],
+                              'LogicalResourceId': event['LogicalResourceId'],
+                              'Data': responseData}
+              print 'RESPONSE BODY:\n' + json.dumps(responseBody)
+              try:
+                  req = requests.put(event['ResponseURL'], data=json.dumps(responseBody))
+                  if req.status_code != 200:
+                      print req.text
+                      raise Exception('Recieved non 200 response while sending response to CFN.')
+                  return
+              except requests.exceptions.RequestException as e:
+                  print req.text
+                  print e
+                  raise
+
+
+          def lambda_handler(event, context):
+              ec2 = boto3.client('ec2')
+              responseStatus = 'SUCCESS'
+              responseData = {}
+              if event['RequestType'] == 'Delete':
+                  sendResponse(event, context, responseStatus, responseData)
+
+              groupName = event['ResourceProperties']['sgName']
+              try:
+                  sg_res = ec2.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [groupName]}])
+                  responseData = {'SGID': sg_res['SecurityGroups'][0]['GroupId']}
+                  sendResponse(event, context, responseStatus, responseData)
+              except:
+                  responseStatus = 'FAILED'
+                  responseData = {'Failed': 'Received Unkown error:'}
+                  traceback.print_exc()
+                  sendResponse(event, context, responseStatus, responseData)
+
+
+      Runtime: "python2.7"
+      Timeout: 60
+      MemorySize: 256
+  GetDSSecurityGroupID:
+    DependsOn: DSADStack
+    Type: Custom::GetDSSecurityGroupID
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: [ GetSGIDLambda, Arn ]
+      sgName: '*_controllers'
+  GetAD1SecurityGroupID:
+    DependsOn: ADStack
+    Type: Custom::GetAD1SecurityGroupID
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: [ GetSGIDLambda, Arn ]
+      sgName: '*-DomainController1SG-*'
+  GetAD2SecurityGroupID:
+    DependsOn: ADStack
+    Type: Custom::GetAD2SecurityGroupID
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: [ GetSGIDLambda, Arn ]
+      sgName: '*-DomainController2SG-*'
+  DSOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: '-1'
+      FromPort: '-1'
+      ToPort: '-1'
+      CidrIp:
+        Ref: VPCCIDR
+      GroupId:
+        Fn::GetAtt:
+        - GetDSSecurityGroupID
+        - SGID
+  DSInboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: '-1'
+      FromPort: '-1'
+      ToPort: '-1'
+      CidrIp:
+        Ref: VPCCIDR
+      GroupId:
+        Fn::GetAtt:
+        - GetDSSecurityGroupID
+        - SGID
+  AD1InboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: 'tcp'
+      FromPort: '3389'
+      ToPort: '3389'
+      SourceSecurityGroupId:
+        Fn::GetAtt: DSRDGWStack.Outputs.RemoteDesktopGatewaySGID
+      GroupId:
+        Fn::GetAtt:
+        - GetAD1SecurityGroupID
+        - SGID
+  AD2InboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: 'tcp'
+      FromPort: '3389'
+      ToPort: '3389'
+      SourceSecurityGroupId:
+        Fn::GetAtt: DSRDGWStack.Outputs.RemoteDesktopGatewaySGID
+      GroupId:
+        Fn::GetAtt:
+        - GetAD2SecurityGroupID
+        - SGID
+  ADDS1InboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: '-1'
+      FromPort: '-1'
+      ToPort: '-1'
+      CidrIp:
+        Ref: DSVPCCIDR
+      GroupId:
+        Fn::GetAtt:
+        - GetAD1SecurityGroupID
+        - SGID
+  ADDS2InboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: '-1'
+      FromPort: '-1'
+      ToPort: '-1'
+      CidrIp:
+        Ref: DSVPCCIDR
+      GroupId:
+        Fn::GetAtt:
+        - GetAD2SecurityGroupID
+        - SGID
+  ADDSVPCPeeringConnection:
+    DependsOn:
+      - DSADStack
+      - ADStack
+    Type: AWS::EC2::VPCPeeringConnection
+    Properties:
+      VpcId:
+        Fn::GetAtt: VPCStack.Outputs.VPCID
+      PeerVpcId:
+        Fn::GetAtt: DSVPCStack.Outputs.VPCID
+  ADPublicPeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: DSVPCCIDR
+      RouteTableId:
+        Fn::GetAtt: VPCStack.Outputs.PublicSubnetRouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+  ADPrivate1PeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: DSVPCCIDR
+      RouteTableId:
+        Fn::GetAtt: VPCStack.Outputs.PrivateSubnet1ARouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+  ADPrivate2PeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: DSVPCCIDR
+      RouteTableId:
+        Fn::GetAtt: VPCStack.Outputs.PrivateSubnet2ARouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+  DSPublicPeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: VPCCIDR
+      RouteTableId:
+        Fn::GetAtt: DSVPCStack.Outputs.PublicSubnetRouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+  DSPrivate1PeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: VPCCIDR
+      RouteTableId:
+        Fn::GetAtt: DSVPCStack.Outputs.PrivateSubnet1ARouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+  DSPrivate2PeeringRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock:
+        Ref: VPCCIDR
+      RouteTableId:
+        Fn::GetAtt: DSVPCStack.Outputs.PrivateSubnet2ARouteTable
+      VpcPeeringConnectionId:
+        Ref: ADDSVPCPeeringConnection
+Outputs:
+  RemoteDesktopGatewayIP:
+    Description: IP Address of the remote desktop gateway
+    Value:
+      Fn::GetAtt: DSRDGWStack.Outputs.EIP1
+  ADonDSDomainAdminUser:
+      Description: Admin user of AD on Directory Service
+      Value:
+        Fn::Join:
+        - ''
+        -
+          - Ref: DSDomainNetBIOSName
+          - '\admin'
+  ADonEC2DomainAdminUser:
+      Description: Admin user of AD on EC2
+      Value:
+        Fn::Join:
+        - ''
+        -
+          - Ref: DomainNetBIOSName
+          - '\'
+          - Ref: DomainAdminUser
+  ADDomainController1:
+    Description: AD on EC2 Domain Controller 1
+    Value: 10.0.0.10
+  ADDomainController2:
+    Description: AD on EC2 Domain Controller 2
+    Value: 10.0.32.10
+  DSVPCId:
+    Description: VPC ID of AWS DS which will be monitored using VPC Flow Logs
+    Value:
+      Fn::GetAtt: DSVPCStack.Outputs.VPCID
+    Export:
+      Name: DefaultVPCId
+  ADonEC2VPCId:
+    Description: VPC ID of AD on EC2 which will be monitored using VPC Flow Logs
+    Value:
+      Fn::GetAtt: VPCStack.Outputs.VPCID
