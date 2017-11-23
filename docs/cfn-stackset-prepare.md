@@ -50,14 +50,20 @@ aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-bod
     }
     ```
 
-4.  [Create a Key Pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair) named `lz-security-kp-eu-west-1` using Amazon EC2 and store it securely. It will be needed later.
+4.  Create a Key Pair
+[Create a Key Pair using Amazon EC2](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair) and store it securely. It will be needed during the lab.
 
-    **Using CLI:**
+Or create the key pair [using CLI](http://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-keypairs.html) and store the returned KeyMaterial securely.
 
-    Create a Key Pair using CLI and store the returned KeyMaterial securely in a file (e.g. lz-security-kp-eu-west-1). That’s the private key which will be used to login to instances.
-    ```
-    aws ec2 create-key-pair --region eu-west-1 --query 'KeyMaterial' --output text --key-name lz-security-kp-eu-west-1 --profile security >> lz-security-kp-eu-west-1.pem
-    ```
+***example linux:***
+```bash
+$ aws ec2 create-key-pair --profile <PUT_YOUR_PROFILE_NAME_HERE> --key-name lz-<PUT_YOUR_PROFILE_NAME_HERE>-kp-eu-west-1 --query 'KeyMaterial' --output text > <PUT_YOUR_PROFILE_NAME_HERE>.pem
+```
+
+***example windows:***
+```shell
+aws ec2 create-key-pair --profile <PUT_YOUR_PROFILE_NAME_HERE> --key-name lz-<PUT_YOUR_PROFILE_NAME_HERE>-kp-eu-west-1 --query 'KeyMaterial' --output text | out-file -encoding ascii -filepath <PUT_YOUR_PROFILE_NAME_HERE>.pem
+```
 
 5.  Repeat the steps 1 to 4 for the *Shared Services* and *Application One* account to create the AWSCloudFormationStackSetExecutionRole in those accounts. Create KeyPair with appropriate name for the accounts.
     **Using CLI:**

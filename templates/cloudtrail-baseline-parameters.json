@@ -1,7 +1,7 @@
 [
   {
       "ParameterKey": "pNotifyEmail",
-      "ParameterValue": "ppalanis@amazon.com"
+      "ParameterValue": "mpedragl@amazon.com"
   },
   {
       "ParameterKey": "pSupportsGlacier",
@@ -9,6 +9,6 @@
   },
   {
       "ParameterKey": "pCloudTrailBucketName",
-      "ParameterValue": "loggingbuckets-rcloudtrailbucket-1wptlk7qpuzhb"
+      "ParameterValue": "stackset-dd609add-d04c-4b8c-a86-rcloudtrailbucket-1dqu7f6a0nado"
   }
 ]
