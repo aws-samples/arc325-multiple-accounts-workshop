@@ -1,4 +1,4 @@
-Create CloudFormation StackSet Admin IAM Role in `Billing` account and CloudFormation StackSet Execution IAM Role in `Security`, `Shared Services` and `Application One` accounts.
+Create CloudFormation StackSet Admin IAM Role in `WorkShop` account and CloudFormation StackSet Execution IAM Role in `WorkShop` and `Billing` accounts.
 
 > Use **Ireland (eu-west-1)** to create all resources.
 
@@ -8,17 +8,20 @@ Create CloudFormation StackSet Admin IAM Role in `Billing` account and CloudForm
 
 
 ## Create IAM role required for AWS CloudFormation StackSet Administration
-> This should be performed in `Shared Services` Account.
+> This should be performed in `WorkShop` Account.
 
-1.  Login to "Shared Services Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
+1.  Login to "WorkShop Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
 
 2.  Change the region to Ireland (eu-west-1) by [selecting the region](http://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/getting-started.html#select-region) from the top right of Management Console.
 
 3.  Navigate to [CloudFormation](https://eu-west-1.console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks?filter=active) console and create a new stack using [AWSCloudFormationStackSetAdministrationRole.yml](../templates/AWSCloudFormationStackSetAdministrationRole.yml) template.
 
 **Using CLI:**
+
+Navigate to `templates` folder which contains all the CloudFormation templates.
+
 ```
-aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-body file://AWSCloudFormationStackSetAdministrationRole.yml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --profile sharedserv
+aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-body file://AWSCloudFormationStackSetAdministrationRole.yml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --profile workshop
 ```
 ```json
 {
@@ -27,9 +30,9 @@ aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-bod
 ```
 ## Create IAM role required for AWS CloudFormation StackSet Execution
 
-> This should be performed in `Billing`, `Security`, `Shared Services` and `Application One` accounts in Ireland (eu-west-1) region.
+> This should be performed in `Billing` and `WorkShop` accounts in Ireland (eu-west-1) region.
 
-1.  Login to "Security Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
+1.  Login to "WorkShop Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
 
 2.  Change the region to Ireland (eu-west-1) by [selecting the region](http://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/getting-started.html#select-region) from the top right of Management Console.
 
@@ -39,11 +42,12 @@ aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-bod
 
     Navigate to `templates` folder which contains all the CloudFormation templates.
 
-    Update the ParameterValue in the below command to 12 digit AWS account ID of Shared Services account.
+    Update the ParameterValue in the below command to 12 digit AWS account ID of WorkShop account.
 
     ```
-    aws cloudformation create-stack --stack-name CFNStackSetExecutionRole --template-body file://AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --parameters ParameterKey=AdministratorAccountId,ParameterValue=321098987654 --profile security
+    aws cloudformation create-stack --stack-name CFNStackSetExecutionRole --template-body file://AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --parameters ParameterKey=AdministratorAccountId,ParameterValue=321098987654 --profile workshop
     ```
+
     ```json
     {
         "StackId": "arn:aws:cloudformation:us-east-1:987654321098:stack/CFNStackSetExecutionRole/28a3c090-ba80-11e7-93d4-500c3d1abad2"
@@ -57,25 +61,26 @@ Or create the key pair [using CLI](http://docs.aws.amazon.com/cli/latest/usergui
 
 ***example linux:***
 ```bash
-$ aws ec2 create-key-pair --profile <PUT_YOUR_PROFILE_NAME_HERE> --key-name lz-<PUT_YOUR_PROFILE_NAME_HERE>-kp-eu-west-1 --query 'KeyMaterial' --output text > <PUT_YOUR_PROFILE_NAME_HERE>.pem
+$ aws ec2 create-key-pair --profile workshop --key-name lz-workshop-kp-eu-west-1 --query 'KeyMaterial' --output text > lz-workshop-kp-eu-west-1.pem
 ```
 
 ***example windows:***
 ```shell
-aws ec2 create-key-pair --profile <PUT_YOUR_PROFILE_NAME_HERE> --key-name lz-<PUT_YOUR_PROFILE_NAME_HERE>-kp-eu-west-1 --query 'KeyMaterial' --output text | out-file -encoding ascii -filepath <PUT_YOUR_PROFILE_NAME_HERE>.pem
+aws ec2 create-key-pair --profile workshop --key-name lz-workshop-kp-eu-west-1 --query 'KeyMaterial' --output text | out-file -encoding ascii -filepath lz-workshop-kp-eu-west-1.pem
 ```
-
-5.  Repeat the steps 1 to 4 for the *Shared Services* and *Application One* account to create the AWSCloudFormationStackSetExecutionRole in those accounts. Create KeyPair with appropriate name for the accounts.
-    **Using CLI:**
-
-    Execute the command in Step 4 above by updating the parameters `--key-name` and `--profile` appropriately for the specific accounts.
-
-    > NOTE: Make sure you update the command in above step write to unique file each run based on the key name.
 
 6.  Login to *Billing* account and follow steps 2 to 4 to create the AWSCloudFormationStackSetExecutionRole in that account. Also create KeyPair with appropriate name for the account.
 
     **Using CLI:**
 
+    Navigate to `templates` folder which contains all the CloudFormation templates.
+
+    Update the ParameterValue in the below command to 12 digit AWS account ID of WorkShop account.
+
+    ```bash
+    aws cloudformation create-stack --stack-name CFNStackSetExecutionRole --template-body file://AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --parameters ParameterKey=AdministratorAccountId,ParameterValue=321098987654 --profile billing
     ```
-    aws ec2 create-key-pair --region eu-west-1 --query 'KeyMaterial' --output text --key-name lz-billing-kp-eu-west-1 --profile billing >> lz-billing-kp-eu-west-1.pem
+
+    ```bash
+    aws ec2 create-key-pair --region eu-west-1 --query 'KeyMaterial' --output text --key-name lz-billing-kp-eu-west-1 --profile billing > lz-billing-kp-eu-west-1.pem
     ```
