@@ -1,13 +1,13 @@
 As part of this module you will launch a CloudFormation stack which will create two VPC’s, install Microsoft AD on EC2, create AWS Directory Service Microsoft AD, create Remote Desktop Gateway and establish VPC peering between the two VPC’s.
 
-> This should be performed on Shared Services account in **Ireland (eu-west-1)** region.
+> This should be performed on WorkShop account in **Ireland (eu-west-1)** region.
 
 **Table of Contents:**
 -   [Launch the Active Directory CloudFormation stack](#launch-the-active-directory-cloudformation-stack)
 
 ## Launch the Active Directory CloudFormation stack
 
-1.  Login to "Shared Services Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
+1.  Login to "WorkShop Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
 
 2.  Change the region to Ireland (eu-west-1) by [selecting the region](http://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/getting-started.html#select-region) from the top right of Management Console.
 
@@ -16,13 +16,13 @@ As part of this module you will launch a CloudFormation stack which will create 
 4.  Provide a Stack Name (E.g. LZ-Active-Directory), review the following parameters.
     -   DomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   KeyPairName - Name of SSH Key Pair that you created in Shared Services account
+    -   KeyPairName - Name of SSH Key Pair that you created in WorkShop account
 
     -   RestoreModePassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
     -   DSDomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   DSKeyPairName - Name of SSH Key Pair that you created in Shared Services account
+    -   DSKeyPairName - Name of SSH Key Pair that you created in WorkShop account
 
     -   DSRDGWCIDR -  CIDR IP range to which the RD GW access should be enabled (You shall get your current address using <http://checkip.dyndns.org/>).
 
@@ -44,13 +44,13 @@ As part of this module you will launch a CloudFormation stack which will create 
 
     -   DomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   KeyPairName - Name of SSH Key Pair that you created in Shared Services account
+    -   KeyPairName - Name of SSH Key Pair that you created in WorkShop account
 
     -   RestoreModePassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
     -   DSDomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   DSKeyPairName - Name of SSH Key Pair that you created in Shared Services account.
+    -   DSKeyPairName - Name of SSH Key Pair that you created in WorkShop account.
 
     -   DSRDGWCIDR -  CIDR IP range to which the RD GW access should be enabled (You shall get your current address using <http://checkip.dyndns.org/>).
 

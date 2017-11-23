@@ -45,7 +45,7 @@
   },
   {
     "ParameterKey": "KeyPairName",
-    "ParameterValue": "lz-sharedserv-kp-eu-west-1"
+    "ParameterValue": "lz-workshop-kp-eu-west-1"
   },
   {
     "ParameterKey": "PrivateSubnet1CIDR",
@@ -98,7 +98,7 @@
   },
   {
     "ParameterKey": "DSKeyPairName",
-    "ParameterValue": "lz-sharedserv-kp-eu-west-1"
+    "ParameterValue": "lz-workshop-kp-eu-west-1"
   },
   {
     "ParameterKey": "DSPrivateSubnet1CIDR",
