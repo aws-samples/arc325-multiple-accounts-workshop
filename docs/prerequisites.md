@@ -64,7 +64,7 @@ Finally click Next: Review and Create user in the final dialog.
 
 Now you see your newly admin user and group together with the Access key ID. To see the Secret access key once, click on Show next to the stars. Note everything down: those info are needed alter on.
 
-Using the Access Key ID & Secret Access Key obtained from the above step configure a [Named Profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html) and name it according to the function you have in your team changing the <PUT_YOUR_PROFILE_NAME_HERE> placeholder .
+Using the Access Key ID & Secret Access Key obtained from the above step configure a [Named Profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html).
 
 *Example:*
 ```

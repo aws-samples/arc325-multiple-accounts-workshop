@@ -52,50 +52,31 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 ### Create Organizational Units (OUs)
 
-#### Create Security OU
-*   Create Security Organizational Units (OU) and name it `Security` [following the steps in documentation](http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html#create_ou).
+#### Create WorkShop OU
+*   Create WorkShop Organizational Units (OU) and name it `WorkShop` [following the steps in documentation](http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html#create_ou).
 
 **Using CLI:**
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 ```
-aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id r-abcd
+aws organizations create-organizational-unit --region us-east-1 --profile billing --name WorkShop --parent-id r-abcd
 ```
 ```json
 {
     "OrganizationalUnit": {
         "Id": "ou-abcd-7rqbdtza",
         "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
-        "Name": "Security"
+        "Name": "WorkShop"
     }
 }
 ```
 
 > Save the value of Id (e.g. ou-abcd-7rqbdtza) returned by the above command in ResourcesList.txt file.
-
-#### Create Shared Services OU
-*   Create Shared Services Organizational Unit (OU) and name it `Shared Services` [following the steps in documentation](http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html#create_ou).
-
-**Using CLI:**
-
-*   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
-```
-aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id r-abcd
-```
-```json
-{
-    "OrganizationalUnit": {
-        "Id": "ou-abcd-7rqbdtza",
-        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
-        "Name": "Security"
-    }
-}
-```
-
-> Save the value of Id (e.g. ou-abcd-7rqbdtza) returned by the above command in ResourcesList.txt file.
-
 
 #### Create Applications OU
+
+***This step is optional: depend if you own another account that can be onboarded later on***
+
 *   Create Applications Organizational Unit (OU) and name it `Applications` [following the steps in documentation](http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html#create_ou).
 
 **Using CLI:**
@@ -109,7 +90,7 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     "OrganizationalUnit": {
         "Id": "ou-abcd-7rqbdtza",
         "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
-        "Name": "Security"
+        "Name": "Applications"
     }
 }
 ```
@@ -117,9 +98,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 > Save the value of Id (e.g. ou-abcd-7rqbdtza) returned by the above command in ResourcesList.txt file.
 
 
-## Create required AWS accounts
+## Create required AWS account
 
-> Each AWS account that you create requires an unique email address. For ease of use, most mail servers ignores the characters after a plus sign `+`. You shall add strings like `+lzsec` to your existing email address to get unique email address, still the mails will get delivered to the same mailbox as the original email.  
+> The AWS account that you create requires an unique email address. For ease of use, most mail servers ignores the characters after a plus sign `+`. You shall add strings like `+workshop` to your existing email address to get unique email address, still the mails will get delivered to the same mailbox as the original email.  
 >   
 > E.g. If your email address is `noreply@example.com`, you shall use `noreply+lzsec@example.com` while creating the account and it will deliver the emails to `noreply@example.com` mailbox.  
 >   
@@ -137,34 +118,10 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     **Using CLI:**
 
-    Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
+    Update the ```--email``` parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
     ```
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --email noreply+lzsec@example.com --account-name "Security Account"
-    ```
-    ```json
-    {
-        "CreateAccountStatus": {
-            "RequestedTimestamp": 1508943783.375,
-            "State": "IN_PROGRESS",
-            "Id": "car-77558640b99511e78c88511c44cd49c5",
-            "AccountName": "Security Account"
-        }
-    }
-    ```
-
-4.  Create a new Shared Services account by entering the following details.
-
-    *   Full Name – Enter a name (e.g. Shared Services Account)
-    *   Email Address – Valid unique email address (e.g. noreply+lzss@example.com)
-    *   IAM role name – Admin IAM role which the appropriate user in Billing account can assume. Name it **PayerAccountAccessRole** for all the accounts you are creating under the Master account.
-
-    **Using CLI:**
-
-    Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
-
-    ```
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email noreply+lzss@example.com
+    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "WorkShop Account" --email noreply+lzsec@example.com
     ```
     ```json
     {
@@ -172,42 +129,17 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
             "RequestedTimestamp": 1508943783.375,
             "State": "IN_PROGRESS",
             "Id": "car-77558640b99511e78c88511c44cd49c5",
-            "AccountName": "Shared Services Account"
+            "AccountName": "WorkShop Account"
         }
     }
     ```
 
-4.  Create a new Application One account by entering the following details.
-
-    *   Full Name – Enter a name (e.g. Application One Account)
-    *   Email Address – Valid unique email address (e.g. noreply+lzapp1@example.com)
-    *   IAM role name – Admin IAM role which the appropriate user in Billing account can assume. Name it **PayerAccountAccessRole** for all the accounts you are creating under the Master account.
-
-    **Using CLI:**
-
-    Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
-
-    ```
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email noreply+lzapp1@example.com
-    ```
-    ```json
-    {
-        "CreateAccountStatus": {
-            "RequestedTimestamp": 1508943783.375,
-            "State": "IN_PROGRESS",
-            "Id": "car-77558640b99511e78c88511c44cd49c5",
-            "AccountName": "Shared Services Account"
-        }
-    }
-    ```
-4.  Following the above `Step 3` create another 2 accounts for *Shared Services* and *Application One*.
-
-## Move accounts under corresponding Organizational Units
+## Move the account under corresponding Organizational Unit
 
 1.  Navigate to 'Organize Accounts' tab in AWS Organizations console, which will display all the accounts under your organization.
 
     **Using CLI**  
-    Get the 12 digit AWS account Ids of the 'Security', 'Shared Services' and 'Applications' accounts.
+    Get the 12 digit AWS account Id of the 'WorkShop' account.
 
     ```
     aws organizations list-accounts --region us-east-1 --profile billing --query 'Accounts[*].{Name:Name,Email:Email,AccountId:Id}' --output table
@@ -217,20 +149,18 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     |   AccountId  |             Email             |           Name            |
     +--------------+-------------------------------+---------------------------+
     |  123456789012|  noreply+billing@example.com  |  Billing Account          |
-    |  321098987654|  noreply+lzss@example.com     |  Shared Services Account  |
-    |  654321987098|  noreply+lzapp1@example.com   |  Application One Account  |
-    |  987654321098|  noreply+lzsec@example.com    |  Security Account         |
+    |  321098987654|  noreply+lzss@example.com     |  WorkShop Account         |
     +--------------+-------------------------------+---------------------------+
     ```
 
-    If any of the accounts are missing, check the status of create account request using the following command by providing the correct creation request id for `--create-account-request-id` parameter and check the 'FailureReason' to fix it.
+    If the account is still missing, check the status of create account request using the following command by providing the correct creation request id for `--create-account-request-id` parameter and check the 'FailureReason' to fix it.
     ```
     $ aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id car-bb4f1750cdef11e78b08511c66cd64c5
     ```
     ```json
     {
         "CreateAccountStatus": {
-            "AccountName": "Shared Services Account",
+            "AccountName": "WorkShop Account",
             "State": "FAILED",
             "RequestedTimestamp": 1511181518.779,
             "FailureReason": "EMAIL_ALREADY_EXISTS",
@@ -240,12 +170,11 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     }
     ```
 
-2.  Move 'Security Account', 'Shared Services Account' and 'Application One' accounts to their corresponding OU’s.
+2.  Move 'WorkShop' account to its corresponding OU.
 
     **Using CLI**  
-    Find below the example for `Security` account and you should repeat the same steps for `Shared Services` and `Application One` accounts.
 
-    Provide the 12 digit account id of Security account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Security OU (e.g. ou-abcd-7rqbdtza) for `--destination-parent-id`.
+    Provide the 12 digit account id of WorkShop account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the WorkShop OU (e.g. ou-abcd-7rqbdtza) for `--destination-parent-id`.
 
     ```
     aws organizations move-account --region us-east-1 --profile billing --source-parent-id r-abcd --destination-parent-id ou-abcd-7rqbdtza --account-id 987654321098
@@ -260,7 +189,7 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     +------------------------------+---------------+---------------------------+---------+
     |             Email            |      Id       |           Name            | Status  |
     +------------------------------+---------------+---------------------------+---------+
-    |  noreply+lzsec@example.com   |  987654321098 |  Security Account         |  ACTIVE |
+    |  noreply+lzsec@example.com   |  987654321098 |  WorkShop Account         |  ACTIVE |
     +------------------------------+---------------+---------------------------+---------+
     ```
 
@@ -276,20 +205,8 @@ Update the AWS CLI configuration file `~/.aws/config` in your workstation with t
 region=us-east-1
 output=json
 
-[profile security]
-role_arn = arn:aws:iam::987654321098:role/PayerAccountAccessRole
-source_profile = billing
-region=eu-west-1
-output=json
-
-[profile sharedserv]
-role_arn = arn:aws:iam::321098987654:role/PayerAccountAccessRole
-source_profile = billing
-region=eu-west-1
-output=json
-
-[profile appone]
-role_arn = arn:aws:iam::654321987098:role/PayerAccountAccessRole
+[profile workshop]
+role_arn = arn:aws:iam::<workshop-account-id>:role/PayerAccountAccessRole
 source_profile = billing
 region=eu-west-1
 output=json
