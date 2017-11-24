@@ -52,10 +52,10 @@ aws organizations create-organization --feature-set ALL --region us-east-1 --pro
 
 Get the ID of the organization and save it in `ResourcesList.txt`
 
-<code style=display:block;white-space:pre-wrap>
+```
 aws organizations list-roots --region us-east-1 --profile billing --query 'Roots[0].Id'
 <span style="color:green">"r-abcd"</span>
-</code>
+```
 
 ### Create Organizational Units (OUs)
 
@@ -66,7 +66,7 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 
-    <code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b>r-abcd</b>
+    <code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b><i>r-abcd</i></b>
     </code>
     ```json
     {
@@ -87,9 +87,8 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 <code style=display:block;white-space:pre-wrap>
-aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <span style="color:red">r-abcd</span>
+aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <b><i>r-abcd</i></b>
 </code>
-```
 ```json
 {
     "OrganizationalUnit": {
