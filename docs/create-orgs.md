@@ -188,8 +188,8 @@ Update the --email parameter to appropriate email address and run the command. S
 
 Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-<code>
-aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email <b><i>noreply+lzss@example.com</i></b>
+
+<code>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email <b><i>noreply+lzss@example.com</i></b>
 </code>
 
 
@@ -218,8 +218,7 @@ aws organizations create-account --role-name PayerAccountAccessRole --iam-user-a
 
 Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-<code>
-aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email <b><i>noreply+lzapp1@example.com</i></b>
+<code>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email <b><i>noreply+lzapp1@example.com</i></b>
 </code>
 
 
@@ -261,8 +260,7 @@ aws organizations list-accounts --region us-east-1 --profile billing --query 'Ac
 
 If any of the accounts are missing, check the status of create account request using the following command by providing the correct creation request id for `--create-account-request-id` parameter and check the 'FailureReason' to fix it.
 
-<code>
-$ aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <b><i>car-bb4f1750cdef11e78b08511c66cd64c5</i></b>
+<code>aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <b><i>car-bb4f1750cdef11e78b08511c66cd64c5</i></b>
 </code>
 
 
@@ -287,9 +285,9 @@ Select the Security Account in the console and move it to Security OU as explain
 
 Provide the 12 digit account id of Security account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Security OU (e.g. ou-abcd-7example) for `--destination-parent-id`.
 
-<code>
-aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>987654321098</i></b>
+<code>aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>987654321098</i></b>
 </code></br>
+
 
 Check whether the account got moved successfully.
 
@@ -317,13 +315,15 @@ Provide the 12 digit account id of Shared Services account for `--account-id` pa
 
 <code>
 aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>321098987654</i></b>
-</code></br>
+</code><br>
+
 
 Check whether the account got moved successfully.
 
+
 <code>
 aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <b><i>ou-abcd-7example</i></b>
-</code>
+</code><br>
 
 ```
 --------------------------------------------------------------------------------------
@@ -344,15 +344,15 @@ Select the Application One Account in the console and move it to Applications OU
 
 Provide the 12 digit account id of Application One account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Application One OU (e.g. ou-abcd-7example) for `--destination-parent-id`.
 
-<code>
-aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>654321987098</i></b>
-</code></br>
+<code>aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>654321987098</i></b>
+</code><br>
 
 Check whether the account got moved successfully.
 
+
 <code>
 aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <b><i>ou-abcd-7example</i></b>
-</code>
+</code><br>
 
 ```
 --------------------------------------------------------------------------------------
