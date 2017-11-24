@@ -66,7 +66,7 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 
-    <code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <span style="color:red">r-abcd</span>
+    <code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b>r-abcd</b>
     </code>
     ```json
     {
