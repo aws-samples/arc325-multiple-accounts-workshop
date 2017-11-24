@@ -25,7 +25,3 @@ roles:
     ReadOnly :
        action : add
        policy : ReadOnly.json
-    Billing :
-       action : add
-       policy : Billing.json
-       accountgroup : billing

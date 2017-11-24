@@ -234,6 +234,7 @@ Parameters:
   KeyPairName:
     Description: Public/private key pairs allow you to securely connect to your instance
       after it launches
+    Default: lz-sharedserv-kp-eu-west-1
     Type: AWS::EC2::KeyPair::KeyName
   PrivateSubnet1CIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -327,6 +328,7 @@ Parameters:
     Description: Public/private key pairs allow you to securely connect to your instance
       after it launches
     Type: AWS::EC2::KeyPair::KeyName
+    Default: lz-sharedserv-kp-eu-west-1
   DSNumberOfRDGWHosts:
     AllowedValues:
     - '1'

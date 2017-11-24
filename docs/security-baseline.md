@@ -8,6 +8,7 @@ As part of this module you will launch a CloudFormation stack in Security accoun
 -   [Create Config Baseline](#create-config-baseline)
 -   [Create CloudTrail Baseline](#create-cloudtrail-baseline)
 -   [Get the CloudTrail LogGroup in Security account](#get-the-cloudTrail-loggroup-in-security-account)
+-   [Expected Outcome](expected-outcome)
 
 
 ## Create logging buckets
@@ -41,9 +42,11 @@ As part of this module you will launch a CloudFormation stack in Security accoun
     ```
 
 3.  Create Stack Instance in `Security` account by providing the 12 digit AWS account id of Security account to `--accounts` parameter.
-    ```
-    aws cloudformation create-stack-instances --stack-set-name LoggingBuckets --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=1 --region eu-west-1 --profile sharedserv --accounts 987654321098
-    ```
+
+    <code>
+    aws cloudformation create-stack-instances --stack-set-name LoggingBuckets --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=1 --region eu-west-1 --profile sharedserv --accounts <b><i>987654321098</i></b>
+    </code><br>
+
     ```json
     {
         "OperationId": "666a05b3-adef-4692-356a-695bf702678b"
@@ -61,22 +64,28 @@ As part of this module you will launch a CloudFormation stack in Security accoun
     **Using CLI:**
 
     Run the following query by updating the 12 digit account number to your 'Security' account Id.
-    ```
-    aws cloudformation list-stack-instances --stack-set-name LoggingBuckets --region eu-west-1 --profile sharedserv --query 'Summaries[?Account==`"987654321098"`] | [0].StackId' | awk -F'/' '{print $2}'
-    ```
+
+    <code>
+    aws cloudformation list-stack-instances --stack-set-name LoggingBuckets --region eu-west-1 --profile sharedserv --query 'Summaries[?Account==&#96;"<b><i>987654321098</i></b>"&#96;] | [0].StackId' | awk -F'/' '{print $2}'
+    </code><br>
+
     It will return the name of the stack that got created in the 'Security' account.
     ```
     StackSet-702a85d4-966f-485f-4b55-3acf74b5a950
     ```
+
 4.  [Switch Role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) to "Security Account" and CloudFormation console in Ireland region.
 
 5.  Enter the name of the stack copied in Step 3 and select that stack.
 
     **Using CLI:**
     Run the following query by updating the `--stack-name` parameter by copying the value from Step 3. It will return the name of the S3 buckets.
-    ```
-    aws cloudformation describe-stacks --region eu-west-1 --profile security --query 'Stacks[0].Outputs[*]' --output table --stack-name StackSet-702a85d4-966f-485f-4b55-3acf74b5a950
-    ```
+
+    <code>
+    aws cloudformation describe-stacks --region eu-west-1 --profile security --query 'Stacks[0].Outputs[&#42;]' --output table --stack-name <b><i>StackSet-702a85d4-966f-485f-4b55-3acf74b5a950</i></b>
+    </code><br>
+
+
     ```
     ---------------------------------------------------------------------------
     |                             DescribeStacks                              |
@@ -88,7 +97,7 @@ As part of this module you will launch a CloudFormation stack in Security accoun
     |  rCloudTrailBucket  |  loggingbuckets-rcloudtrailbucket-1wptlk7qpuzhb   |
     +---------------------+---------------------------------------------------+
     ```
-6.  Save the values of `rConfigBucket` and `rCloudTrailBucket` in the Outputs section. It will be needed later.
+6.  Save the values of `rConfigBucket` and `rCloudTrailBucket` from the Outputs section in the `ResourcesList.txt` file, it will be needed later.
 
 
 ## Create Config Baseline
@@ -99,7 +108,7 @@ As part of this module you will launch a CloudFormation stack in Security accoun
 
 2.  Provide the StackSet Name `ConfigBaseline`, then enter the config bucket (rConfigBucket) saved earlier in this module as value for *BucketName* parameter and and proceed by clicking 'Next'.
 
-3.  Enter the 12 digit account ID of `Billing`, `Security`, `Shared Services` and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
+3.  Enter the 12 digit account ID of `Security`, `Shared Services` and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
 
 4.  Add 'EU (Ireland)' in the 'Specify Regions' field.
 
@@ -110,18 +119,21 @@ As part of this module you will launch a CloudFormation stack in Security accoun
 1.  Move into the directory named templates (if you are not already in there) which contains the CloudFormation templates and parameters file.
 
 2.  Create the StackSet named `ConfigBaseline` using following command and update the parameter value to appropriate config logging bucket name saved earlier in this module.
-    ```
-        aws cloudformation create-stack-set --stack-set-name ConfigBaseline --capabilities CAPABILITY_NAMED_IAM --template-body file://config-baseline.yml --region eu-west-1 --profile sharedserv --parameters ParameterKey=BucketName,ParameterValue=loggingbuckets-rconfigbucket-l2q7zuexample
-    ```
+    <code>
+        aws cloudformation create-stack-set --stack-set-name ConfigBaseline --capabilities CAPABILITY_NAMED_IAM --template-body file://config-baseline.yml --region eu-west-1 --profile sharedserv --parameters ParameterKey=BucketName,ParameterValue=<b><i>loggingbuckets-rconfigbucket-l2q7zuexample</i></b>
+    </code><br>
+
     ```json
     {
         "StackSetId": "ConfigBaseline:5c54daa1-9155-4d84-6cfc-9b1fdexample"
     }
     ```
-3.  Create Stack Instance in `Billing`, `Security`, `Shared Services` and `Application One` accounts by providing the 12 digit AWS account id of all the accounts in space separated format to `--accounts` parameter.
-    ```
-        aws cloudformation create-stack-instances --stack-set-name ConfigBaseline --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts 123456789012 987654321098 321098987654 654321987098
-    ```
+
+3.  Create Stack Instance in `Security`, `Shared Services` and `Application One` accounts by providing the 12 digit AWS account id of all the accounts in space separated format to `--accounts` parameter.
+    <code>
+        aws cloudformation create-stack-instances --stack-set-name ConfigBaseline --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts <b><i>987654321098 321098987654 654321987098</i></b>
+    </code><br>
+
     ```json
     {
         "OperationId": "666a05b3-adef-4692-356a-695bfexample"
@@ -136,7 +148,7 @@ As part of this module you will launch a CloudFormation stack in Security accoun
 
 2.  Provide the StackSet Name `CloudTrailBaseline`, then enter the CloudTrail bucket name (rCloudTrailBucket) saved earlier in this module as value for *pCloudTrailBucketName* parameter, enter your email to which you want to receive CloudTrail alerts for *pNotifyEmail* parameter and and proceed by clicking 'Next'.
 
-3.  Enter the 12 digit account ID of `Billing`, `Security`, `Shared Services` and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
+3.  Enter the 12 digit account ID of `Security`, `Shared Services` and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
 
 4.  Add 'EU (Ireland)' in the 'Specify Regions' field.
 
@@ -165,9 +177,10 @@ As part of this module you will launch a CloudFormation stack in Security accoun
     ```
 
 5.  Create Stack Instance in `Billing`, `Security`, `Shared Services` and `Application One` accounts by providing the 12 digit AWS account id of all the accounts in space separated format to `--accounts` parameter.
-    ```
-    aws cloudformation create-stack-instances --stack-set-name CloudTrailBaseline --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts 123456789012 987654321098 321098987654 654321987098
-    ```
+    <code>
+    aws cloudformation create-stack-instances --stack-set-name CloudTrailBaseline --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts <b><i>987654321098 321098987654 654321987098</i></b>
+    </code><br>
+
     ```json
     {
         "OperationId": "666a05b3-adef-4692-356a-695bfexample"
@@ -175,9 +188,11 @@ As part of this module you will launch a CloudFormation stack in Security accoun
     ```
 
 6.  Get the name of CloudTrailBaseline stack instance created in 'Security' account as part of the above step. Update the account number in below command to your security account id.
-    ```
-    aws cloudformation list-stack-instances --region eu-west-1 --profile sharedserv --stack-set-name CloudTrailBaseline --query 'Summaries[?Account==`"987654321098"`].StackId' --output text | awk -F'/' '{print $2}'
 
+    <code>
+    aws cloudformation list-stack-instances --region eu-west-1 --profile sharedserv --stack-set-name CloudTrailBaseline --query 'Summaries[?Account==&#96;"<b><i>987654321098</i></b>"&#96;].StackId' --output text | awk -F'/' '{print $2}'
+    </code><br>
+    ```
     StackSet-1feaf7a6-44bb-a3c8-970d-f06a7e0d2273
     ```
 
@@ -192,8 +207,20 @@ As part of this module you will launch a CloudFormation stack in Security accoun
 4.  Get the value of `rCloudTrailLogGroup` from the output section of the stack and save it in `ResourcesList.txt`
 
     **Using CLI:***
-    ```
-    aws cloudformation describe-stacks --region eu-west-1 --profile security --query 'Stacks[0].Outputs[?OutputKey==`"rCloudTrailLogGroup"`].OutputValue' --output text --stack-name StackSet-1feaf7a6-44bb-a3c8-970d-f06a7e0d2273
 
+    <code>
+    aws cloudformation describe-stacks --region eu-west-1 --profile security --query 'Stacks[0].Outputs[?OutputKey==&#96;"<b><i>rCloudTrailLogGroup</i></b>"&#96;].OutputValue' --output text --stack-name <b><i>StackSet-1feaf7a6-44bb-a3c8-970d-f06a7e0d2273</i></b>
+    </code><br>
+    ```
     StackSet-1feaf7a6-44bb-a3c8-970d-f06a7e0d2273-rCloudTrailLogGroup-1J14REXAMPLE
     ```
+
+## Expected Outcome
+
+After the stack got created completely.
+*   Created LoggingBuckets stack instance in `Security` account using CloudFormation StackSets.
+*   Created ConfigBaseline stack instances in `Security`, `Shared Services` and `Application One` accounts.
+*   Created CloudTrailBaseline stack instances in `Security`, `Shared Services` and `Application One` accounts.
+*   Obtained the name of CloudTrail LogGroup in `Security` account
+
+![security-baseline-image](../images/security-baseline.png)

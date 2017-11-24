@@ -9,6 +9,7 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 -   [Onboard Policies and Roles](#onboard-policies-and-roles)
 -   [Assign IAM Roles to your Active Directory Groups](#assign-iam-roles-to-your-active-directory-groups)
 -   [Use the solution webpage to access a sub-account](#use-the-solution-webpage-to-access-a-sub-account)
+-   [Expected Outcome](expected-outcome)
 
 
 ## Launch the Cross Account Manager (master role) in Shared Services Account
@@ -74,7 +75,7 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
 1.  Open the file [account.yml](../CrossAccountManager/account.yml) which located inside CrossAccountManager directory in your favorite text editor.
 
-2.  Update the 12 digit account id of your `Billing`, `Security` and `Application One` accounts in the appropriate field and save the file.
+2.  Update the 12 digit account id of your `Security` and `Application One` accounts in the appropriate field and save the file.
 
 3.  Navigate to [Amazon S3 Console](https://s3.console.aws.amazon.com/s3/home?region=eu-west-1#) and open the 'ConfigBucket' bucket that was created in the previous procedure and open the `account` folder.
 
@@ -92,9 +93,11 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
     2.  Upload the account.yml file inside CrossAccountManager directory to the 'account' directory in `CAMConfigBucket` S3 bucket. Update the S3 location & `--sse-kms-key-id` parameter to the value obtained in the above step 1.
 
-        ```
-        aws s3 cp account.yml --region eu-west-1 --profile sharedserv s3://lz-cross-account-manager-config-prakash/account/ --sse aws:kms --sse-kms-key-id b44a4526-abcd-0707-wxyz-e299c63423da
+        <code>
+        aws s3 cp account.yml --region eu-west-1 --profile sharedserv s3://lz-cross-account-manager-config-prakash/account/ --sse aws:kms --sse-kms-key-id <b><i>b44a4526-abcd-0707-wxyz-e299c63423da</i></b>
+        </code><br>
 
+        ```
         upload: ./account.yml to s3://lz-cross-account-manager-config-prakash/account/account.yml
         ```
 
@@ -112,7 +115,6 @@ As part of this module you will deploy and configure the [Cross Account Manager]
         | AccountGroup  |   AccountId    | Status   |
         +---------------+----------------+----------+
         |  devops       |  654321987098  |  pending |
-        |  billing      |  123456789012  |  pending |
         |     *         |  987654321098  |  pending |
         +---------------+----------------+----------+
     ```
@@ -126,7 +128,7 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
 2.  Provide the StackSet Name `CrossAccountManager`, then enter 12 digit account Id of your Shared Services Account (Cross Account Manager Master) for `MasterAccountID` parameter and proceed by clicking 'Next'.
 
-3.  Enter the 12 digit account ID of `Billing`, `Security`, and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
+3.  Enter the 12 digit account ID of `Security`, and `Application One` accounts as comma separated under 'Deploy stacks in accounts' field.
 
 4.  Add 'EU (Ireland)' in the 'Specify Regions' field.
 
@@ -138,20 +140,22 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
 2.  Create the StackSet named `CrossAccountManager` using following command. Update the ParameterValue for MasterAccountID to be 12 digit account Id of your Shared Services Account (Cross Account Manager Master).
 
-    ```
-    aws cloudformation create-stack-set --stack-set-name CrossAccountManager --capabilities CAPABILITY_NAMED_IAM --template-body file://aws-cross-account-manager-sub.yml --region eu-west-1 --profile sharedserv --parameters ParameterKey=MasterAccountID,ParameterValue=321098987654
-    ```
+    <code>
+    aws cloudformation create-stack-set --stack-set-name CrossAccountManager --capabilities CAPABILITY_NAMED_IAM --template-body file://aws-cross-account-manager-sub.yml --region eu-west-1 --profile sharedserv --parameters ParameterKey=MasterAccountID,ParameterValue=<b><i>321098987654</i></b>
+    </code><br>
+
     ```json
     {
         "StackSetId": "CrossAccountManager:5c54daa1-9155-4d84-6cfc-9b1fdexample"
     }
     ```
 
-3.  Create Stack Instance in `Billing`, `Security`, and `Application One` accounts by providing the 12 digit AWS account id of all the accounts in space separated format to `--accounts` parameter.
+3.  Create Stack Instance in `Security`, and `Application One` accounts by providing the 12 digit AWS account id of all the accounts in space separated format to `--accounts` parameter.
 
-    ```
-    aws cloudformation create-stack-instances --stack-set-name CrossAccountManager --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts 123456789012 987654321098 654321987098
-    ```
+    <code>
+    aws cloudformation create-stack-instances --stack-set-name CrossAccountManager --regions eu-west-1 --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile sharedserv --accounts <b><i>987654321098 654321987098</i></b>
+    </code><br>
+
     ```json
     {
         "OperationId": "666a05b3-adef-4692-356a-695bfexample"
@@ -168,15 +172,14 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
     Update the S3 location to `CAMConfigBucket` & `--sse-kms-key-id` parameter
 
-    ```bash
-    for pf in Administrator.json Billing.json DBAdmin.json DevOps.json NetworkAdmin.json PowerUser.json ReadOnly.json; do echo "Uploading $pf to S3"; aws s3 cp  --region eu-west-1 --profile sharedserv $pf s3://lz-cam-config-attempt1/custom_policy/ --sse aws:kms --sse-kms-key-id b44a4526-abcd-0707-wxyz-e299c63423da; done
-    ```
+    <code>
+    for pf in Administrator.json DBAdmin.json DevOps.json NetworkAdmin.json PowerUser.json ReadOnly.json; do echo "Uploading $pf to S3"; aws s3 cp --sse aws:kms --region eu-west-1 --profile sharedserv $pf s3://<b><i>lz-cam-config-EXAPMPLE</i></b>/custom_policy/ --sse-kms-key-id <b><i>b44a4526-abcd-0707-wxyz-e299c63423da</i></b>; done
+    </code><br>
+
     _Output:_
     ```
     Uploading Administrator.json to S3
     upload: ./Administrator.json to s3://lz-cross-account-manager-config-prakash/custom_policy/Administrator.json
-    Uploading Billing.json to S3
-    upload: ./Billing.json to s3://lz-cross-account-manager-config-prakash/custom_policy/Billing.json
     Uploading DBAdmin.json to S3
     upload: ./DBAdmin.json to s3://lz-cross-account-manager-config-prakash/custom_policy/DBAdmin.json
     Uploading DevOps.json to S3
@@ -194,7 +197,6 @@ As part of this module you will deploy and configure the [Cross Account Manager]
     aws s3 ls --region eu-west-1 --profile sharedserv s3://lz-cross-account-manager-config-prakash/custom_policy/
 
     2017-11-12 12:53:12        132 Administrator.json
-    2017-11-12 12:53:12        375 Billing.json
     2017-11-12 12:53:14       3578 DBAdmin.json
     2017-11-12 12:53:15       9044 DevOps.json
     2017-11-12 12:53:16       6536 NetworkAdmin.json
@@ -208,9 +210,11 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 
     -   Upload the role.yml file inside CrossAccountManager directory to the 'role' directory in `CAMConfigBucket` S3 bucket. Update the S3 location & `--sse-kms-key-id` parameter to the value obtained in the earlier procedure.
 
-        ```
-        aws s3 cp role.yml --region eu-west-1 --profile sharedserv s3://lz-cross-account-manager-config-prakash/role/ --sse aws:kms --sse-kms-key-id b44a4526-abcd-0707-wxyz-e299c63423da
+        <code>
+        aws s3 cp role.yml --region eu-west-1 --profile sharedserv --sse aws:kms s3://<b><i>lz-cross-account-manager-config-EXAMPLE</i></b>/role/ --sse-kms-key-id <b><i>b44a4526-abcd-0707-wxyz-e299c63423da</i></b>
+        </code><br>
 
+        ```
         upload: ./role.yml to s3://lz-cross-account-manager-config-prakash/role/role.yml
         ```
 
@@ -234,7 +238,6 @@ As part of this module you will deploy and configure the [Cross Account Manager]
         |  devops      |  CrossAccountManager-NetworkAdmin  |  active  |
         |  devops      |  CrossAccountManager-DBAdmin       |  active  |
         |  *           |  CrossAccountManager-ReadOnly      |  active  |
-        |  billing     |  CrossAccountManager-Billing       |  active  |
         +--------------+------------------------------------+----------+
         ```
     -   Check the list of roles that will be created in corresponding accounts.
@@ -249,17 +252,13 @@ As part of this module you will deploy and configure the [Cross Account Manager]
         +--------------+------------------------------------+----------+
         |  987654321098|  CrossAccountManager-Administrator |  active  |
         |  654321987098|  CrossAccountManager-Administrator |  active  |
-        |  123456789012|  CrossAccountManager-Administrator |  active  |
         |  987654321098|  CrossAccountManager-PowerUser     |  active  |
         |  654321987098|  CrossAccountManager-PowerUser     |  active  |
-        |  123456789012|  CrossAccountManager-PowerUser     |  active  |
         |  654321987098|  CrossAccountManager-DevOps        |  active  |
         |  654321987098|  CrossAccountManager-NetworkAdmin  |  active  |
         |  654321987098|  CrossAccountManager-DBAdmin       |  active  |
         |  987654321098|  CrossAccountManager-ReadOnly      |  active  |
         |  654321987098|  CrossAccountManager-ReadOnly      |  active  |
-        |  123456789012|  CrossAccountManager-ReadOnly      |  active  |
-        |  123456789012|  CrossAccountManager-Billing       |  active  |
         +--------------+------------------------------------+----------+
         ```
 
@@ -281,7 +280,6 @@ As part of this module you will deploy and configure the [Cross Account Manager]
 |CrossAccountManager-NetworkAdmin|AWS-NetworkAdmin|
 |CrossAccountManager-DBAdmin|AWS-DBAdmin|
 |CrossAccountManager-ReadOnly|AWS-ReadOnly|
-|CrossAccountManager-Billing|AWS-Billing|
 
 ## Use the solution webpage to access a sub-account
 
@@ -303,3 +301,23 @@ As part of this module you will deploy and configure the [Cross Account Manager]
     > The solution webpage will show all sub-accounts that the solution manages, not just the accounts your role(s) has access to. If you try to access a sub-account that is not authorized for your role, the switch role window will show an authorization error.
 
 8.  Choose Switch Role to open the AWS Management Console for that sub-account. The account will switch automatically.
+
+
+## Expected Outcome
+*   Created CrossAccountManager(CAM) master in `Shared Services` account.
+    -   Created the CAM config and access links S3 bucket.
+    -   Created 3 DynamoDB tables named `CrossAccountManager-Accounts`, `CrossAccountManager-Roles`, and `CrossAccountManager-Account-Roles`.
+    -   Created required lambda functions.
+    -   Created KMS Key for S3.
+*   Successfully uploaded account.yml and it get updated to `CrossAccountManager-Accounts` table appropriately.
+*   Created CrossAccountManager sub role stack instances in `Security` and `Application One` account using CloudFormation StackSets.
+*   Successfully uploaded all the policy files and role.yml to appropriate directory in S3.
+*   Successfully processed the role.yml file which will be updated in `CrossAccountManager-Roles` and `CrossAccountManager-Account-Roles` DynamoDB tables.
+*   Assigned the AD Group to correct IAM roles created by Cross Account Manager.
+*   Created access URL in Directory service.
+*   Enabled Management Console Access in Directory Service.
+*   Successfully login to access URL using the AD User credentials.
+*   successfully open the access links URL from the S3 bucket.
+*   Successfully login to another account using the access links page based the appropriate privileges for the user that you have logged in.
+
+![cross-account-manager-image](../images/cross-account-manager.png)

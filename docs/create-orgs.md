@@ -1,8 +1,6 @@
-Create AWS Organization, Organizational Units under them. Then create sub accounts for Security, Shared Services, Applications, etc. and map them under appropriate OU’s.
+In this module you will create an AWS Organization, 3 Organizational Units under them for specific logical grouping. Create specific AWS accounts for Security, Shared Services, and  Application One accounts and map them under appropriate OU’s.
 
 > *   Use **North Virginia (us-east-1)** region in billing account.
->
-> *   Use **Ireland (eu-west-1)** to create all resources in sub accounts.
 
 **Table of Contents:**
 -   [Create Organization and Organizational Units in the billing account](#create-organization-and-organizational-units-in-the-billing-account)
@@ -17,6 +15,7 @@ Create AWS Organization, Organizational Units under them. Then create sub accoun
     -   [Move 'Shared Services Account' to 'Shared Services OU'.](#move-shared-services-account-to-shared-services-ou)
     -   [Move 'Application One Account' to 'Applications OU'.](#move-application-one-account-to-applications-ou)
 -   [Configure CLI for Cross Account access through Assume Role (only if you are using CLI)](#configure-cli-for-cross-account-access-through-assume-role-only-if-you-are-using-cli)
+-   [Expected Outcome](expected-outcome)
 
 
 ## Create Organization and Organizational Units in the billing account
@@ -94,7 +93,7 @@ r-abcd
 
 <code>
 aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <b><i>r-abcd</i></b>
-</code>
+</code><br>
 
 
 ```json
@@ -119,7 +118,7 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
 <code>
 aws organizations create-organizational-unit --region us-east-1 --profile billing --name Applications --parent-id <b><i>r-abcd</i></b>
-</code>
+</code><br>
 
 
 ```json
@@ -317,7 +316,6 @@ Provide the 12 digit account id of Shared Services account for `--account-id` pa
 aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i>r-abcd</i></b> --destination-parent-id <b><i>ou-abcd-7example</i></b> --account-id <b><i>321098987654</i></b>
 </code><br>
 
-
 Check whether the account got moved successfully.
 
 
@@ -396,3 +394,12 @@ output=json
 ```
 
 You shall use the above snippet and update the appropriate Account ID in the role_arn.
+
+## Expected Outcome
+*   Created an Organizations
+*   Created 3 Organizational Units named `Security`, `Shared Services` and `Applications`
+*   Created 3 Sub Accounts for `Security`, `Shared Services` and `Application One`
+*   Moved the accounts under corresponding Organization Units.
+*   Updated the AWS CLI config to enable Cross Account Access using role.
+
+![create-orgs-image](../images/create-orgs.png)

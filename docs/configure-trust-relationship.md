@@ -1,9 +1,14 @@
 As part of this module you will login to Active Directory on EC2, create users and groups and prepare it for trust relationship. Login to Remote Desktop Gateway of DS AD and prepare it for trust relationship and establish trust relationship.
 
+Objective of this module is to enable SSO using your existing directory in on-premise environment. For ease of lab we have created an AD on EC2 instance which shall be considered as on-premise AD. You will establish a trust relationship between your on-premise AD and AD on DS in the similar way to configure SSO.
+
+
 **Table of Contents:**
 -   [Login to the Remote Desktop Gateway](#login-to-the-remote-desktop-gateway)
 -   [Prepare AD on EC2 for trust relationship](#prepare-ad-on-ec2-for-trust-relationship)
 -   [Create trust relationship between AD on EC2 & AD on DS](#create-trust-relationship-between-ad-on-ec2--ad-on-ds)
+-   [Expected Outcome](expected-outcome)
+
 
 ## Login to the Remote Desktop Gateway
 
@@ -69,17 +74,33 @@ As part of this module you will login to Active Directory on EC2, create users a
     -   --directory-id : Value that you obtained in previous command.
     -   --remote-domain-name : Domain name that you have provided for AD on EC2. (If you have not changed the default value then it would be `landingzone-op.aws`).
     -   --trust-password : The password that you provided while configuring trust relationship at AD on EC2.
-    ```
-    $ aws ds create-trust --remote-domain-name landinzone-op.aws --trust-direction Two-Way --trust-type Forest --conditional-forwarder-ip-addrs 10.0.0.10 10.0.32.10 --region eu-west-1 --profile sharedserv --directory-id d-9876543exp --trust-password securepassword
-    ```
+
+    <code>
+    $ aws ds create-trust --remote-domain-name landinzone-op.aws --trust-direction Two-Way --trust-type Forest --conditional-forwarder-ip-addrs 10.0.0.10 10.0.32.10 --region eu-west-1 --profile sharedserv --directory-id <b><i>d-9876543exp</i></b> --trust-password <b><i>securepassword</i></b>
+    </code><br>
+
     ```json
     {
         "TrustId": "t-23963c9367"
     }
     ```
-3.  Check the state of the trust by providing the correct `--directory-id` after few minutes and it should be 'Verified'.
-    ```
-    aws ds describe-trusts --region eu-west-1 --profile sharedserv --query 'Trusts[*].{TrustId:TrustId,State:TrustState}' --output text --directory-id 9876543exp
 
+3.  Check the state of the trust by providing the correct `--directory-id` after few minutes and it should be 'Verified'.
+
+    <code>
+    aws ds describe-trusts --region eu-west-1 --profile sharedserv --query 'Trusts[&#42;].{TrustId:TrustId,State:TrustState}' --output text --directory-id <b><i>d-9876543exp</i></b>
+    </code><br>
+
+    ```
     Verified    t-23963c9367
     ```
+
+## Expected Outcome
+*   Successfully logged in Remote Desktop Gateway and EC2 Domain Controller.
+*   Created DNS Conditional Forwarder in AD on EC2.
+*   Created AD Groups & Users by running the PowerShell script.
+*   Configured Trust Relationship in AD on EC2.
+*   Configured Trust Relationship in AD on DS.
+*   Successfully verified the trusted relationship.
+
+![configure-trust-relationship](../images/configure-trust-relationship.png)

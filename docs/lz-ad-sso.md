@@ -4,6 +4,7 @@ As part of this module you will launch a CloudFormation stack which will create 
 
 **Table of Contents:**
 -   [Launch the Active Directory CloudFormation stack](#launch-the-active-directory-cloudformation-stack)
+-   [Expected Outcome](expected-outcome)
 
 ## Launch the Active Directory CloudFormation stack
 
@@ -16,13 +17,9 @@ As part of this module you will launch a CloudFormation stack which will create 
 4.  Provide a Stack Name (E.g. LZ-Active-Directory), review the following parameters.
     -   DomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   KeyPairName - Name of SSH Key Pair that you created in Shared Services account
-
     -   RestoreModePassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
     -   DSDomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
-
-    -   DSKeyPairName - Name of SSH Key Pair that you created in Shared Services account
 
     -   DSRDGWCIDR -  CIDR IP range to which the RD GW access should be enabled (You shall get your current address using <http://checkip.dyndns.org/>).
 
@@ -44,13 +41,9 @@ As part of this module you will launch a CloudFormation stack which will create 
 
     -   DomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
-    -   KeyPairName - Name of SSH Key Pair that you created in Shared Services account
-
     -   RestoreModePassword - Must be between 8 and 32 characters containing letters, numbers and symbols
 
     -   DSDomainAdminPassword - Must be between 8 and 32 characters containing letters, numbers and symbols
-
-    -   DSKeyPairName - Name of SSH Key Pair that you created in Shared Services account.
 
     -   DSRDGWCIDR -  CIDR IP range to which the RD GW access should be enabled (You shall get your current address using <http://checkip.dyndns.org/>).
 
@@ -104,3 +97,15 @@ As part of this module you will launch a CloudFormation stack which will create 
     |  ADDomainController1    |  10.0.0.10                  |
     +-------------------------+-----------------------------+
     ```
+
+## Expected Outcome
+
+After the stack got created completely.
+*   Created VPC for AD on EC2
+*   Created 2 Domain Controllers in EC2
+*   Created VPC for AD on Directory Service (DS).
+*   Created 1 Directory of type Microsoft AD in AWS Directory Service.
+*   Created 1 Remote Desktop Gateway in VPC for AD on DS.
+*   Created VPC peering and enabled between AD on EC2 and AD on DS.
+
+![lz-ad-sso-image](../images/lz-ad-sso.png)

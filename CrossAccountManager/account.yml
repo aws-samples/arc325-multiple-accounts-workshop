@@ -1,12 +1,6 @@
 accounts:
   -
     # AWS Account ID
-    # Billing Account
-    123456789012 :
-        # Email associated with the account
-        email : noreply+billing@example.com
-        # Optional to group the accounts
-        accountgroup : billing
     # Security
     987654321098 :
         email : noreply+lzsec@example.com
