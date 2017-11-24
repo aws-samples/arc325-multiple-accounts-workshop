@@ -52,10 +52,10 @@ aws organizations create-organization --feature-set ALL --region us-east-1 --pro
 
 Get the ID of the organization and save it in `ResourcesList.txt`
 
-```
+<code style=display:block;white-space:pre-wrap>
 aws organizations list-roots --region us-east-1 --profile billing --query 'Roots[0].Id'
-<span style="color:green">"r-abcd"</span>
-```
+<b><i><u>"r-abcd"</u></i></b>
+</code>
 
 ### Create Organizational Units (OUs)
 
@@ -66,17 +66,18 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 
-    <code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b><i>r-abcd</i></b>
-    </code>
-    ```json
-    {
-        "OrganizationalUnit": {
-            "Id": "ou-abcd-7example",
-            "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7example",
-            "Name": "Security"
-        }
+<code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b><i><u>r-abcd</u></i></b>
+</code>
+
+```json
+{
+    "OrganizationalUnit": {
+        "Id": "ou-abcd-7example",
+        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7example",
+        "Name": "Security"
     }
-    ```
+}
+```
 
 > Save the value of Security OU Id (e.g. ou-abcd-7example) returned by the above command or from the UI in ResourcesList.txt file.
 
@@ -87,8 +88,9 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 <code style=display:block;white-space:pre-wrap>
-aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <b><i>r-abcd</i></b>
+aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <b><i><u>r-abcd</u></i></b>
 </code>
+
 ```json
 {
     "OrganizationalUnit": {
@@ -109,8 +111,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 <code style=display:block;white-space:pre-wrap>
-aws organizations create-organizational-unit --region us-east-1 --profile billing --name Applications --parent-id <span style="color:red">r-abcd</span>
+aws organizations create-organizational-unit --region us-east-1 --profile billing --name Applications --parent-id <b><i><u>r-abcd</u></i></b>
 </code>
+
 ```json
 {
     "OrganizationalUnit": {
@@ -147,8 +150,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-    <code style=display:block;white-space:pre-wrap>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Security Account" --email <span style="color:red">noreply+lzsec@example.com</span>
+    <code style=display:block;white-space:pre-wrap>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Security Account" --email <b><i><u>noreply+lzsec@example.com</u></i></b>
     </code>
+
     ```json
     {
         "CreateAccountStatus": {
@@ -176,8 +180,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
     <code style=display:block;white-space:pre-wrap>
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email <span style="color:red">noreply+lzss@example.com</span>
+    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email <b><i><u>noreply+lzss@example.com</u></i></b>
     </code>
+
     ```json
     {
         "CreateAccountStatus": {
@@ -204,8 +209,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
     <code style=display:block;white-space:pre-wrap>
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email <span style="color:red">noreply+lzapp1@example.com</span>
+    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email <b><i><u>noreply+lzapp1@example.com</u></i></b>
     </code>
+
     ```json
     {
         "CreateAccountStatus": {
@@ -225,9 +231,10 @@ Navigate to 'Organize Accounts' tab in AWS Organizations console, which will dis
 **Using CLI**  
 Get the 12 digit AWS account Ids of the 'Security', 'Shared Services' and 'Applications' accounts.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations list-accounts --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,AccountId:Id}' --output table
-</code>
+```
+aws organizations list-accounts --region us-east-1 --profile billing --query 'Accounts[*].{Name:Name,Email:Email,AccountId:Id}' --output table
+```
+
 ```
 ----------------------------------------------------------------------------
 |                               ListAccounts                               |
@@ -242,9 +249,10 @@ aws organizations list-accounts --region us-east-1 --profile billing --query 'Ac
 ```
 
 If any of the accounts are missing, check the status of create account request using the following command by providing the correct creation request id for `--create-account-request-id` parameter and check the 'FailureReason' to fix it.
-<code style=display:block;white-space:pre-wrap>
-$ aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <span style="color:red">car-bb4f1750cdef11e78b08511c66cd64c5</span>
+<code>
+$ aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <b><i><u>car-bb4f1750cdef11e78b08511c66cd64c5</u></i></b>
 </code>
+
 ```json
 {
     "CreateAccountStatus": {
@@ -266,15 +274,16 @@ Select the Security Account in the console and move it to Security OU as explain
 
 Provide the 12 digit account id of Security account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Security OU (e.g. ou-abcd-7example) for `--destination-parent-id`.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations move-account --region us-east-1 --profile billing --source-parent-id <span style="color:red">r-abcd</span> --destination-parent-id <span style="color:red">ou-abcd-7example</span> --account-id <span style="color:red">987654321098</span>
+<code>
+aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>987654321098</u></i></b>
 </code>
 
 Check whether the account got moved successfully.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <span style="color:red">ou-abcd-7example</span>
+<code>
+aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <b><i><u>ou-abcd-7example</u></i></b>
 </code>
+
 ```
 --------------------------------------------------------------------------------------
 |                                ListAccountsForParent                               |
@@ -293,15 +302,16 @@ Select the Shared Services Account in the console and move it to Shared Services
 
 Provide the 12 digit account id of Shared Services account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Shared Services OU (e.g. ou-abcd-7example) for `--destination-parent-id`.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations move-account --region us-east-1 --profile billing --source-parent-id <span style="color:red">r-abcd</span> --destination-parent-id <span style="color:red">ou-abcd-7example</span> --account-id <span style="color:red">321098987654</span>
+<code>
+aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>321098987654</u></i></b>
 </code>
 
 Check whether the account got moved successfully.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <span style="color:red">ou-abcd-7example</span>
+<code>
+aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <b><i><u>ou-abcd-7example</u></i></b>
 </code>
+
 ```
 --------------------------------------------------------------------------------------
 |                                ListAccountsForParent                               |
@@ -321,15 +331,16 @@ Select the Application One Account in the console and move it to Applications OU
 
 Provide the 12 digit account id of Application One account for `--account-id` parameter, provide the ID of the organization (e.g. r-abcd) for `--source-parent-id` parameter and ID of the Application One OU (e.g. ou-abcd-7example) for `--destination-parent-id`.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations move-account --region us-east-1 --profile billing --source-parent-id <span style="color:red">r-abcd</span> --destination-parent-id <span style="color:red">ou-abcd-7example</span> --account-id <span style="color:red">654321987098</span>
+<code>
+aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>654321987098</u></i></b>
 </code>
 
 Check whether the account got moved successfully.
 
-<code style=display:block;white-space:pre-wrap>
-aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <span style="color:red">ou-abcd-7example</span>
+<code>
+aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[&#42;].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <b><i><u>ou-abcd-7example</u></i></b>
 </code>
+
 ```
 --------------------------------------------------------------------------------------
 |                                ListAccountsForParent                               |
