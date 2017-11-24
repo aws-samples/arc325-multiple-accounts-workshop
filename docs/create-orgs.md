@@ -8,7 +8,7 @@ Create AWS Organization, Organizational Units under them. Then create sub accoun
 -   [Create Organization and Organizational Units in the billing account](#create-organization-and-organizational-units-in-the-billing-account)
 -   [Create required AWS accounts](#create-required-aws-accounts)
 -   [Move accounts under corresponding Organizational Units](#move-accounts-under-corresponding-organizational-units)
--   [Configure Cross Account access through Assume Role](#configure-cross-account-access-through-assume-role)
+-   [Configure Cross Account access through Assume Role (if using CLI)](#configure-cross-account-access-through-assume-role)
 
 
 ## Create Organization and Organizational Units in the billing account
@@ -17,7 +17,7 @@ Login to your [AWS Management Console](https://us-east-1.console.aws.amazon.com/
 
 ### Create Organization
 
-Create an Organization if it doesn’t exist already. This account will be your Billing account and you will create additional account under this account.
+Create an Organization. This account will be your Billing account and you will create additional account under this account.
 
 **Using CLI:**
 ```
@@ -65,7 +65,7 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 {
     "OrganizationalUnit": {
         "Id": "ou-abcd-7rqbdtza",
-        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
+        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7example",
         "Name": "Security"
     }
 }
@@ -86,8 +86,8 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 {
     "OrganizationalUnit": {
         "Id": "ou-abcd-7rqbdtza",
-        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
-        "Name": "Security"
+        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7example",
+        "Name": "Shared Services"
     }
 }
 ```
@@ -108,8 +108,8 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 {
     "OrganizationalUnit": {
         "Id": "ou-abcd-7rqbdtza",
-        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7rqbdtza",
-        "Name": "Security"
+        "Arn": "arn:aws:organizations::123456789012:ou/o-got31bf9ah/ou-abcd-7example",
+        "Name": "Applications"
     }
 }
 ```
@@ -139,9 +139,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-    ```
-    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --email noreply+lzsec@example.com --account-name "Security Account"
-    ```
+    <pre>
+    aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Security Account" <span style="color:red">--email noreply+lzsec@example.com</span>
+    </pre>
     ```json
     {
         "CreateAccountStatus": {

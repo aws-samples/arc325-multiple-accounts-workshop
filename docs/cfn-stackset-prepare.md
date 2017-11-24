@@ -27,7 +27,7 @@ aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-bod
 ```
 ## Create IAM role required for AWS CloudFormation StackSet Execution
 
-> This should be performed in `Billing`, `Security`, `Shared Services` and `Application One` accounts in Ireland (eu-west-1) region.
+> This should be performed in `Security`, `Shared Services` and `Application One` accounts in Ireland (eu-west-1) region.
 
 1.  Login to "Security Account" with **PayerAccountAccessRole** role created as part of account creation using the [cross account switch role](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html) capability.
 
@@ -65,11 +65,3 @@ aws cloudformation create-stack --stack-name CFNStackSetAdminRole --template-bod
     Execute the command in Step 4 above by updating the parameters `--key-name` and `--profile` appropriately for the specific accounts.
 
     > NOTE: Make sure you update the command in above step write to unique file each run based on the key name.
-
-6.  Login to *Billing* account and follow steps 2 to 4 to create the AWSCloudFormationStackSetExecutionRole in that account. Also create KeyPair with appropriate name for the account.
-
-    **Using CLI:**
-
-    ```
-    aws ec2 create-key-pair --region eu-west-1 --query 'KeyMaterial' --output text --key-name lz-billing-kp-eu-west-1 --profile billing >> lz-billing-kp-eu-west-1.pem
-    ```
