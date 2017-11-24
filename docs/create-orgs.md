@@ -52,10 +52,13 @@ aws organizations create-organization --feature-set ALL --region us-east-1 --pro
 
 Get the ID of the organization and save it in `ResourcesList.txt`
 
-<code style=display:block;white-space:pre-wrap>
+<code>
 aws organizations list-roots --region us-east-1 --profile billing --query 'Roots[0].Id'
-<b><i><u>"r-abcd"</u></i></b>
 </code>
+
+```
+r-abcd
+```
 
 ### Create Organizational Units (OUs)
 
@@ -66,8 +69,9 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
 
-<code style=display:block;white-space:pre-wrap>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b><i><u>r-abcd</u></i></b>
+<code>aws organizations create-organizational-unit --region us-east-1 --profile billing --name Security --parent-id <b><i><u>r-abcd</u></i></b>
 </code>
+
 
 ```json
 {
@@ -87,9 +91,10 @@ aws organizations list-roots --region us-east-1 --profile billing --query 'Roots
 **Using CLI:**
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
-<code style=display:block;white-space:pre-wrap>
+<code>
 aws organizations create-organizational-unit --region us-east-1 --profile billing --name "Shared Services" --parent-id <b><i><u>r-abcd</u></i></b>
 </code>
+
 
 ```json
 {
@@ -110,9 +115,10 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 **Using CLI:**
 
 *   Use the correct organization ID for parameter `--parent-id` in the below command, create organizational unit.
-<code style=display:block;white-space:pre-wrap>
+<code>
 aws organizations create-organizational-unit --region us-east-1 --profile billing --name Applications --parent-id <b><i><u>r-abcd</u></i></b>
 </code>
+
 
 ```json
 {
@@ -150,8 +156,9 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-    <code style=display:block;white-space:pre-wrap>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Security Account" --email <b><i><u>noreply+lzsec@example.com</u></i></b>
+    <code>aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Security Account" --email <b><i><u>noreply+lzsec@example.com</u></i></b>
     </code>
+
 
     ```json
     {
@@ -179,9 +186,10 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-    <code style=display:block;white-space:pre-wrap>
+    <code>
     aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Shared Services Account" --email <b><i><u>noreply+lzss@example.com</u></i></b>
     </code>
+
 
     ```json
     {
@@ -208,9 +216,10 @@ aws organizations create-organizational-unit --region us-east-1 --profile billin
 
     Update the --email parameter to appropriate email address and run the command. Save the create request id in the 'ResourcesList.txt' file.
 
-    <code style=display:block;white-space:pre-wrap>
+    <code>
     aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name "Application One Account" --email <b><i><u>noreply+lzapp1@example.com</u></i></b>
     </code>
+
 
     ```json
     {
@@ -249,6 +258,7 @@ aws organizations list-accounts --region us-east-1 --profile billing --query 'Ac
 ```
 
 If any of the accounts are missing, check the status of create account request using the following command by providing the correct creation request id for `--create-account-request-id` parameter and check the 'FailureReason' to fix it.
+
 <code>
 $ aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <b><i><u>car-bb4f1750cdef11e78b08511c66cd64c5</u></i></b>
 </code>
@@ -278,6 +288,7 @@ Provide the 12 digit account id of Security account for `--account-id` parameter
 aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>987654321098</u></i></b>
 </code>
 
+
 Check whether the account got moved successfully.
 
 <code>
@@ -305,6 +316,7 @@ Provide the 12 digit account id of Shared Services account for `--account-id` pa
 <code>
 aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>321098987654</u></i></b>
 </code>
+
 
 Check whether the account got moved successfully.
 
@@ -334,6 +346,7 @@ Provide the 12 digit account id of Application One account for `--account-id` pa
 <code>
 aws organizations move-account --region us-east-1 --profile billing --source-parent-id <b><i><u>r-abcd</u></i></b> --destination-parent-id <b><i><u>ou-abcd-7example</u></i></b> --account-id <b><i><u>654321987098</u></i></b>
 </code>
+
 
 Check whether the account got moved successfully.
 
