@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cross-Account Manager Sub Account
+Outputs:
+  CAMConfigBucket:
+    Description: CrossAccountManager Admin role for the solution
+    Value:
+      Ref: CAMAdmin
+Parameters:
+  MasterAccountID:
+    AllowedPattern: \d{12}
+    ConstraintDescription: Must be a valid AWS Account ID without hyphens.
+    Description: Account ID of the master account.
+    MaxLength: '12'
+    MinLength: '12'
+    Type: String
+Resources:
+  CAMAdmin:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:iam::'
+                - Ref: MasterAccountID
+                - :role/CrossAccountManager-Admin-DO-NOT-DELETE
+        Version: '2012-10-17'
+      Path: /
+      RoleName: CrossAccountManager-Admin-DO-NOT-DELETE
+    Type: AWS::IAM::Role
+  IAMPermissionsPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - iam:CreateRole
+          - iam:DeleteRole
+          - iam:GetRole
+          - iam:PutRolePolicy
+          - iam:DeleteRolePolicy
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:iam:'
+              - ':'
+              - Ref: AWS::AccountId
+              - :role/CrossAccountManager-*
+        - Action:
+          - iam:ListRoles
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:iam:'
+              - ':'
+              - Ref: AWS::AccountId
+              - :role/
+        Version: '2012-10-17'
+      PolicyName: IAM_Permissions
+      Roles:
+      - Ref: CAMAdmin
+      - Ref: InitSubAccountExecRole
+    Type: AWS::IAM::Policy
+  InitSubAccount:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This Lambda function subscribes SNS topic from Master Account
+      Handler: index.handleSubAccountInit
+      Role:
+        Fn::GetAtt:
+        - InitSubAccountExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '60'
+    Type: AWS::Lambda::Function
+  InitSubAccountCustomResource:
+    DependsOn: CAMAdmin
+    Properties:
+      MasterAccountID:
+        Ref: MasterAccountID
+      ServiceToken:
+        Fn::GetAtt:
+        - InitSubAccount
+        - Arn
+    Type: Custom::InitSubAccountCustomResource
+  InitSubAccountExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:logs:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: AWS::AccountId
+                - :log-group:/aws/lambda/*
+          - Action:
+            - sns:Publish
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:sns:'
+                - Ref: AWS::Region
+                - ':'
+                - Ref: MasterAccountID
+                - :CrossAccountManager-AccountTopic
+          Version: '2012-10-17'
+        PolicyName: Cloudwatch_Logs_SNS_Permissions
+    Type: AWS::IAM::Role

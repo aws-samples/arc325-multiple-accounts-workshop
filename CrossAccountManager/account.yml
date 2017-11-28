@@ -1,0 +1,10 @@
+accounts:
+  -
+    # AWS Account ID
+    # Security
+    987654321098 :
+        email : noreply+lzsec@example.com
+    # AppOne
+    654321987098 :
+        email: noreply+lzapp1@example.com
+        accountgroup : devops

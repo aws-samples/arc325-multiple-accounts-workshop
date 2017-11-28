@@ -1,0 +1,312 @@
+[
+    {
+        "_id": "Basic",
+        "_type": "dashboard",
+        "_source": {
+            "title": "Basic",
+            "hits": 0,
+            "description": "",
+            "panelsJSON": "[{\"col\":7,\"id\":\"HTTP-200-Code-Count\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":10,\"id\":\"HTTP-404-Code-Count\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":1,\"id\":\"Bytes-Total\",\"row\":3,\"size_x\":6,\"size_y\":2,\"type\":\"visualization\"},{\"col\":1,\"id\":\"Packets-Accept\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":4,\"id\":\"Packets-Reject\",\"row\":1,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":1,\"id\":\"Top-10-Src-Address-Packets-Total\",\"row\":5,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":4,\"id\":\"Top-10-Src-Address-Packets-Reject\",\"row\":5,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":1,\"id\":\"Total-Packets-Src-Address\",\"row\":7,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":4,\"id\":\"Reject-Packets-Src-Address\",\"row\":7,\"size_x\":3,\"size_y\":2,\"type\":\"visualization\"},{\"col\":7,\"id\":\"Top-10-Access-Keys\",\"row\":3,\"size_x\":3,\"size_y\":4,\"type\":\"visualization\"},{\"id\":\"Top-10-Event-Sources\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":4,\"col\":10,\"row\":3}]",
+            "version": 1,
+            "timeRestore": false,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}}}]}"
+            }
+        }
+    },
+    {
+        "_id": "CloudTrail",
+        "_type": "dashboard",
+        "_source": {
+            "title": "CloudTrail",
+            "hits": 0,
+            "description": "",
+            "panelsJSON": "[{\"id\":\"Event-by-Name-and-Time\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":2,\"col\":1,\"row\":1},{\"id\":\"Events-by-Account-Id\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":2,\"col\":4,\"row\":1},{\"id\":\"Top-10-Event-Sources\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":2,\"col\":7,\"row\":1},{\"id\":\"Top-10-Access-Keys\",\"type\":\"visualization\",\"size_x\":3,\"size_y\":2,\"col\":10,\"row\":1}]",
+            "version": 1,
+            "timeRestore": false,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+            }
+        }
+    },
+    {
+        "_id": "All-Data",
+        "_type": "search",
+        "_source": {
+            "title": "All Data",
+            "description": "",
+            "hits": 0,
+            "columns": [
+                "_source"
+            ],
+            "sort": [
+                "@timestamp",
+                "desc"
+            ],
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[],\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}"
+            }
+        }
+    },
+    {
+        "_id": "HTTP-200-Code",
+        "_type": "search",
+        "_source": {
+            "title": "HTTP 200 Code",
+            "description": "",
+            "hits": 0,
+            "columns": [
+                "_source"
+            ],
+            "sort": [
+                "@timestamp",
+                "desc"
+            ],
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"query\":{\"query_string\":{\"query\":\"status:200\",\"analyze_wildcard\":true}},\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Accept",
+        "_type": "search",
+        "_source": {
+            "title": "Accept",
+            "description": "",
+            "hits": 0,
+            "columns": [
+                "_source"
+            ],
+            "sort": [
+                "@timestamp",
+                "desc"
+            ],
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[],\"query\":{\"query_string\":{\"query\":\"action:accept\",\"analyze_wildcard\":true}}}"
+            }
+        }
+    },
+    {
+        "_id": "Reject",
+        "_type": "search",
+        "_source": {
+            "title": "Reject",
+            "description": "",
+            "hits": 0,
+            "columns": [
+                "_source"
+            ],
+            "sort": [
+                "@timestamp",
+                "desc"
+            ],
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[],\"query\":{\"query_string\":{\"query\":\"action:reject\",\"analyze_wildcard\":true}}}"
+            }
+        }
+    },
+    {
+        "_id": "HTTP-404-Code",
+        "_type": "search",
+        "_source": {
+            "title": "HTTP 404 Code",
+            "description": "",
+            "hits": 0,
+            "columns": [
+                "_source"
+            ],
+            "sort": [
+                "@timestamp",
+                "desc"
+            ],
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"query\":{\"query_string\":{\"query\":\"status:404\",\"analyze_wildcard\":true}},\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Reject-Packets-Src-Address",
+        "_type": "visualization",
+        "_source": {
+            "title": "Reject Packets Src Address",
+            "visState": "{\"type\":\"pie\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":false,\"isDonut\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"packets\"}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"srcaddr\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "Reject",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+      "_id": "Packets-Accept",
+      "_type": "visualization",
+      "_source": {
+        "title": "Packets - Accept",
+        "visState": "{\n  \"type\": \"line\",\n  \"params\": {\n    \"shareYAxis\": true,\n    \"addTooltip\": true,\n    \"addLegend\": true,\n    \"showCircles\": true,\n    \"smoothLines\": false,\n    \"interpolate\": \"linear\",\n    \"scale\": \"linear\",\n    \"drawLinesBetweenPoints\": true,\n    \"radiusRatio\": 9,\n    \"times\": [],\n    \"addTimeMarker\": false,\n    \"defaultYExtents\": false,\n    \"setYExtents\": false,\n    \"yAxis\": {}\n  },\n  \"aggs\": [\n    {\n      \"id\": \"2\",\n      \"type\": \"date_histogram\",\n      \"schema\": \"segment\",\n      \"params\": {\n        \"field\": \"@timestamp\",\n        \"interval\": \"auto\",\n        \"customInterval\": \"2h\",\n        \"min_doc_count\": 1,\n        \"extended_bounds\": {}\n      }\n    },\n    {\n      \"id\": \"3\",\n      \"type\": \"sum\",\n      \"schema\": \"metric\",\n      \"params\": {\n        \"field\": \"packets\"\n      }\n    }\n  ],\n  \"listeners\": {}\n}",
+        "description": "",
+        "savedSearchId": "Accept",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\n  \"filter\": []\n}"
+        }
+      }
+    },
+    {
+        "_id": "Packets-Reject",
+        "_type": "visualization",
+        "_source": {
+            "title": "Packets - Reject",
+            "visState": "{\"type\":\"line\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"showCircles\":true,\"smoothLines\":false,\"interpolate\":\"linear\",\"scale\":\"linear\",\"drawLinesBetweenPoints\":true,\"radiusRatio\":9,\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"packets\"}},{\"id\":\"2\",\"type\":\"date_histogram\",\"schema\":\"segment\",\"params\":{\"field\":\"@timestamp\",\"interval\":\"custom\",\"customInterval\":\"30s\",\"min_doc_count\":1,\"extended_bounds\":{}}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "Reject",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Top-10-Src-Address-Packets-Reject",
+        "_type": "visualization",
+        "_source": {
+            "title": "Reject Src Addr",
+            "visState": "{\"type\":\"table\",\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMeticsAtAllLevels\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"packets\"}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"srcaddr\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "Reject",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Top-10-Src-Address-Packets-Total",
+        "_type": "visualization",
+        "_source": {
+            "title": "Total Src Addr",
+            "visState": "{\"type\":\"table\",\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMeticsAtAllLevels\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"packets\"}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"srcaddr\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "All-Data",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "HTTP-404-Code-Count",
+        "_type": "visualization",
+        "_source": {
+            "title": "HTTP 404 Code Count",
+            "visState": "{\"type\":\"metric\",\"params\":{\"fontSize\":60},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "HTTP-404-Code",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "HTTP-200-Code-Count",
+        "_type": "visualization",
+        "_source": {
+            "title": "HTTP 200 Code Count",
+            "visState": "{\"type\":\"metric\",\"params\":{\"fontSize\":60},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "HTTP-200-Code",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Total-Packets-Src-Address",
+        "_type": "visualization",
+        "_source": {
+            "title": "Total Packets Src Address",
+            "visState": "{\"type\":\"pie\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":false,\"isDonut\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"packets\"}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"srcaddr\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "All-Data",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Top-10-Access-Keys",
+        "_type": "visualization",
+        "_source": {
+            "title": "Top 10 Access Keys",
+            "visState": "{\"type\":\"table\",\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMeticsAtAllLevels\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"userIdentity.accessKeyId\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "All-Data",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Bytes-Total",
+        "_type": "visualization",
+        "_source": {
+            "title": "Bytes - Total",
+            "visState": "{\"type\":\"line\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"showCircles\":true,\"smoothLines\":false,\"interpolate\":\"linear\",\"scale\":\"linear\",\"drawLinesBetweenPoints\":true,\"radiusRatio\":9,\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"sum\",\"schema\":\"metric\",\"params\":{\"field\":\"bytes\"}},{\"id\":\"2\",\"type\":\"date_histogram\",\"schema\":\"segment\",\"params\":{\"field\":\"@timestamp\",\"interval\":\"custom\",\"customInterval\":\"30s\",\"min_doc_count\":1,\"extended_bounds\":{}}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "All-Data",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Top-10-Event-Sources",
+        "_type": "visualization",
+        "_source": {
+            "title": "Top 10 Event Sources",
+            "visState": "{\"type\":\"table\",\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMeticsAtAllLevels\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"eventSource\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "savedSearchId": "All-Data",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Event-by-Name-and-Time",
+        "_type": "visualization",
+        "_source": {
+            "title": "Event by Name and Time",
+            "visState": "{\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"date_histogram\",\"schema\":\"segment\",\"params\":{\"field\":\"@timestamp\",\"interval\":\"auto\",\"customInterval\":\"2h\",\"min_doc_count\":1,\"extended_bounds\":{}}},{\"id\":\"3\",\"type\":\"terms\",\"schema\":\"group\",\"params\":{\"field\":\"eventName\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+            }
+        }
+    },
+    {
+        "_id": "Events-by-Account-Id",
+        "_type": "visualization",
+        "_source": {
+            "title": "Events by Account Id",
+            "visState": "{\"type\":\"pie\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"isDonut\":true},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"4\",\"type\":\"terms\",\"schema\":\"split\",\"params\":{\"field\":\"@owner\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"1\",\"row\":false}},{\"id\":\"3\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"eventName\",\"size\":5,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+            "description": "",
+            "version": 1,
+            "kibanaSavedObjectMeta": {
+                "searchSourceJSON": "{\"index\":\"[cwl-]YYYY.MM.DD\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+            }
+        }
+    }
+]

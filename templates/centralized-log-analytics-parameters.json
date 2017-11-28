@@ -1,0 +1,54 @@
+[
+  {
+      "ParameterKey": "ProxyUsername",
+      "ParameterValue": "logging-user"
+  },
+  {
+    "ParameterKey": "ProxyPass",
+    "ParameterValue": "QhZ0@Ab1sPiBObzGiT97"
+  },
+  {
+    "ParameterKey": "SSHLocation",
+    "ParameterValue": "54.239.6.0/24"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "lz-security-kp-eu-west-1"
+  },
+  {
+    "ParameterKey": "DOMAINNAME",
+    "ParameterValue": "lz-logging-domain"
+  },
+  {
+    "ParameterKey": "ClusterSize",
+    "ParameterValue": "Small"
+  },
+  {
+    "ParameterKey": "VPCCidrparameter",
+    "ParameterValue": "10.250.0.0/16"
+  },
+  {
+    "ParameterKey": "Subnet1Cidrparameter",
+    "ParameterValue": "10.250.250.0/24"
+  },
+  {
+    "ParameterKey": "Subnet2Cidrparameter",
+    "ParameterValue": "10.250.251.0/24"
+  },
+  {
+    "ParameterKey": "SendAnonymousData",
+    "ParameterValue": "No"
+  },
+  {
+    "ParameterKey": "VPCFlowLogsLogGroup",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "NotifyEmail",
+    "ParameterValue": "noreply@example.com"
+  },
+  {
+    "ParameterKey": "CloudTrailLogGroup",
+    "ParameterValue": "StackSet-448681b1-99be-4db5-84a1-cd52fd27e731-rCloudTrailLogGroup-1ROWRB8MLTYNU"
+  }
+]

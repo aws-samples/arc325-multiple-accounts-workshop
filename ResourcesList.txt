@@ -1,0 +1,81 @@
+Record the list of resources that you are creating for easy reference.
+
+Prerequisites:
+Billing Account Id (12 digit) =>
+Billing Account LabUser Access ID =>
+Billing Account LabUser Secret Key =>
+
+
+Create AWS Organization and sub accounts:
+ID of the root organization (e.g. r-abcd) =>
+ID of the Security OU (e.g. ou-abcd-7rqbdtza) =>
+ID of the Shared Services OU (e.g. ou-abcd-7rqbdtza) =>
+ID of the Application One OU (e.g. ou-abcd-7rqbdtza) =>
+Email address of Security account (e.g. noreply+lzsec@example.com) =>
+Email address of Shared Services account (e.g. noreply+lzss@example.com) =>
+Email address of Application One account (e.g. noreply+lzapp1@example.com) =>
+Security Account create request id (e.g. car-bb4f1750cdef11e78b08511c66cd64c5) =>
+Shared Services Account create request id (e.g. car-bb4f1750cdab11e78b08511c66cd64c5) =>
+Application One Account create request id (e.g. car-cc4f1750cdef11e78b09611c66cd64c5) =>
+Security Account Id (12 digit) =>
+Shared Services Account Id (12 digit) =>
+Application One Account Id (12 digit) =>
+
+
+Prepare accounts for CloudFormation StackSet:
+EC2 Key Pair name of Security account [eu-west-1] => lz-security-kp-eu-west-1
+EC2 Key Pair name of Shared Services account [eu-west-1] => lz-sharedserv-kp-eu-west-1
+EC2 Key Pair name of Application One account [eu-west-1] => lz-appone-kp-eu-west-1
+
+
+Create Active Directory for SSO:
+AD on EC2 Domain Controller 1 (DC1) IP => 10.0.0.10
+AD on EC2 Domain Controller 2 (DC2) IP => 10.0.32.10
+AD on EC2 Domain Name => landingzone-op.aws
+AD on EC2 Domain NetBIOS Name => landingzone-op
+AD on EC2 Domain Admin User (e.g. landingzone-op\StackAdmin) =>
+AD on EC2 Domain Admin Password =>
+AD on EC2 Restore Mode Password =>
+AD on EC2 VPC ID (from CFN output) =>
+AD on DS Domain Name => landingzone.aws
+AD on DS Domain NetBIOS Name => landingzone
+AD on DS Domain Admin User (e.g. landingzone\admin) =>
+AD on DS Domain Admin Password =>
+AD on DS VPC ID (from CFN output) =>
+Remote Desktop Gateway IP (from CFN output) =>
+
+
+Configure Config and CloudTrail on all accounts:
+Name of AWS Config Logging S3 Bucket (e.g. stackset-*-rconfigbucket-example) =>
+Name of AWS CloudTrail Logging S3 Bucket (e.g. stackset-*-rcloudtrailbucket-example) =>
+Name of CloudTrail baseline stack instance created in Security account (e.g. StackSet-example) =>
+Name of AWS CloudTrail LogGroup in Security account (e.g. StackSet-*-rCloudTrailLogGroup-EXAMPLE) =>
+
+
+Configure Centralized Logging:
+Kibana Proxy Username => logging-user
+Kibana Proxy Password =>
+Kibana URL (from CFN output) =>
+ElasticSearch Domain Endpoint (from CFN output) =>
+
+
+Configure trust relationship between AD on EC2 and AD on DS:
+DNS addresses of AD on DS (e.g. 10.1.34.148, 10.1.10.255) =>
+Password for the users created in AD (which you entered while running CreateUsersAndGroups.ps1 script) =>
+Trust Password for relationship between AD on EC2 and AD on DS =>
+
+
+Deploy and Configure Cross Account Manager:
+Cross Account Manager configuration S3 Bucket (e.g. lz-cam-config-example) =>
+Cross Account Manager Access Links S3 Bucket (e.g. lz-cam-access-links-example) =>
+KMS Key Alias (e.g. CrossAccountManager-Key) =>
+KMS Key Id (e.g. b44a4526-abcd-0707-wxyz-e299c63423da) =>
+DynamoDB accounts table => CrossAccountManager-Accounts
+DynamoDB roles table => CrossAccountManager-Roles
+DynamoDB roles per account table => CrossAccountManager-Account-Roles
+AWS Management console access URL (e.g. https://lz-example.awsapps.com/console/) =>
+
+
+On-borad a new account:
+Email address of Application Two account (e.g. noreply+lzapp2@example.com) =>
+Application Two Account Id (12 digit) =>

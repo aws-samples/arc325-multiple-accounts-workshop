@@ -1,0 +1,910 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  SendData:
+    Fn::Equals:
+    - Ref: SendAnonymousData
+    - 'Yes'
+Description: '(SO0015) - Cross-Account Manager Solution: Master Account template '
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Bucket Configuration
+      Parameters:
+      - ConfigBucket
+      - AccessLinksBucket
+    - Label:
+        default: Anonymous Metrics Request
+      Parameters:
+      - SendAnonymousData
+Outputs:
+  AccessLinksBucket:
+    Description: S3 bucket for storing the Access Links page with shortucts to all the Sub-Accounts/Roles managed by the solution
+    Value:
+      Ref: AccessLinkBucket
+  AnonymousData:
+    Description: Send Anonymous Data
+    Value:
+      Ref: SendAnonymousData
+  CAMConfigBucket:
+    Description: S3 bucket to input files for the solution
+    Value:
+      Ref: CAMConfigBucket
+  KMSKeyAlias:
+    Description: KMS Customer Master Key to upload files to S3 Config bucket
+    Value:
+      Ref: CAMKeyAlias
+  UUID:
+    Description: Newly created random UUID.
+    Value:
+      Fn::GetAtt:
+      - CreateUniqueID
+      - UUID
+Parameters:
+  AccessLinksBucket:
+    Default: ''
+    Description: Name of the Bucket to store the Access Links page with shortucts to all the Sub-Accounts/Roles managed by the solution
+    Type: String
+  ConfigBucket:
+    Default: ''
+    Description: Name of the Bucket to input files for the solution
+    Type: String
+  SendAnonymousData:
+    AllowedValues:
+    - 'Yes'
+    - 'No'
+    Default: 'No'
+    Description: Send anonymous data to AWS
+    Type: String
+Resources:
+  AccessLinkBucket:
+    DeletionPolicy: Retain
+    Properties:
+      BucketName:
+        Ref: AccessLinksBucket
+      VersioningConfiguration:
+        Status: Enabled
+    Type: AWS::S3::Bucket
+  AccessLinksHandler:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This event-triggered Lambda function monitors DynamoDB table Account-Roles
+        and updates the static access links page
+      Handler: index.handleAccessLinksEvent
+      Role:
+        Fn::GetAtt:
+        - AccessLinksHandlerExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  AccessLinksHandlerExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+    Type: AWS::IAM::Role
+  AccessLinksHandlerExecRolePolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:GetObject
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: AccessLinkBucket
+              - /
+              - '*'
+        - Action:
+          - s3:ListAllMyBuckets
+          - s3:GetBucketTagging
+          Effect: Allow
+          Resource: arn:aws:s3:::*
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:Scan
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:dynamodb:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - :table/CrossAccountManager-*
+        Version: '2012-10-17'
+      PolicyName: AccessLink_Permissions
+      Roles:
+      - Ref: AccessLinksHandlerExecRole
+    Type: AWS::IAM::Policy
+  AccessLinksHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - AccessLinksHandler
+        - Arn
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: AccessLinksTopic
+    Type: AWS::Lambda::Permission
+  AccessLinksTopic:
+    Properties:
+      DisplayName: CrossAccountManager-AccessLinksTopic
+      Subscription:
+      - Endpoint:
+          Fn::GetAtt:
+          - AccessLinksHandler
+          - Arn
+        Protocol: lambda
+      TopicName: CrossAccountManager-AccessLinksTopic
+    Type: AWS::SNS::Topic
+  AccountEventHandler:
+    Properties:
+      Code:
+        S3Bucket: aws-sa-benelux
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This event-triggered Lambda function monitors S3 bucket and SNS topic for Account related activities e.g. onboarding, offboarding.
+      Handler: index.handleAccountEvent
+      Role:
+        Fn::GetAtt:
+        - AccountEventHandlerExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  AccountEventHandlerExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+    Type: AWS::IAM::Role
+  AccountEventHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - AccountEventHandler
+        - Arn
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: AccountTopic
+    Type: AWS::Lambda::Permission
+  AccountFileHandler:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This event-triggered Lambda function monitors S3 bucket and SNS topic for Account related activities e.g. onboarding, offboarding.
+      Handler: index.handleAccountS3File
+      Role:
+        Fn::GetAtt:
+        - AccountFileHandlerExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  AccountFileHandlerExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+    Type: AWS::IAM::Role
+  AccountFileHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - AccountFileHandler
+        - Arn
+      Principal: s3.amazonaws.com
+      SourceArn:
+        Fn::Join:
+        - ''
+        -
+          - 'arn:aws:s3:::'
+          - Ref: ConfigBucket
+    Type: AWS::Lambda::Permission
+  AccountTopic:
+    Properties:
+      DisplayName: CrossAccountManager-AccountTopic
+      Subscription:
+      - Endpoint:
+          Fn::GetAtt:
+          - AccountEventHandler
+          - Arn
+        Protocol: lambda
+      TopicName: CrossAccountManager-AccountTopic
+    Type: AWS::SNS::Topic
+  CAMConfigBucket:
+    DeletionPolicy: Retain
+    DependsOn:
+    - AccountFileHandlerInvokePermission
+    - RoleFileHandlerInvokePermission
+    Properties:
+      BucketName:
+        Ref: ConfigBucket
+      NotificationConfiguration:
+        LambdaConfigurations:
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: prefix
+                Value: account
+              - Name: suffix
+                Value: .yml
+          Function:
+            Fn::GetAtt:
+            - AccountFileHandler
+            - Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: prefix
+                Value: account
+              - Name: suffix
+                Value: .yaml
+          Function:
+            Fn::GetAtt:
+            - AccountFileHandler
+            - Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: prefix
+                Value: role
+              - Name: suffix
+                Value: .yml
+          Function:
+            Fn::GetAtt:
+            - RoleFileHandler
+            - Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: prefix
+                Value: role
+              - Name: suffix
+                Value: .yaml
+          Function:
+            Fn::GetAtt:
+            - RoleFileHandler
+            - Arn
+      VersioningConfiguration:
+        Status: Enabled
+    Type: AWS::S3::Bucket
+  CAMConfigBucketPolicy:
+    Properties:
+      Bucket:
+        Ref: CAMConfigBucket
+      PolicyDocument:
+        Statement:
+        - Action: s3:PutObject
+          Condition:
+            StringNotEquals:
+              s3:x-amz-server-side-encryption: aws:kms
+          Effect: Deny
+          Principal: '*'
+          Resource:
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /account
+              - '*'
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /role
+              - '*'
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /custom_policy
+              - '*'
+          Sid: DenyUnEncryptedObjectUploads
+        - Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:PutObjectAcl
+          Effect: Allow
+          Principal:
+            AWS:
+            - Fn::Join:
+              - ''
+              -
+                - 'arn:aws:iam::'
+                - Ref: AWS::AccountId
+                - :root
+          Resource:
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /account
+              - '*'
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /role
+              - '*'
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /custom_policy
+              - '*'
+    Type: AWS::S3::BucketPolicy
+  CAMConfigBucketS3Folders:
+    DependsOn:
+    - CAMConfigBucket
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - SolutionHelper
+        - Arn
+      StoreInS3KMS:
+        Fn::Join:
+        - ''
+        -
+          - "[{ 'Bucket' : '"
+          - Ref: CAMConfigBucket
+          - "', "
+          - "'Key' : 'account/', "
+          - "'SSEKMSKeyId' : 'arn:aws:kms:"
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":key/"
+          - Ref: CAMKey
+          - "', "
+          - "'Body': ''"
+          - "},{ 'Bucket' : '"
+          - Ref: CAMConfigBucket
+          - "', "
+          - "'Key' : 'role/', "
+          - "'SSEKMSKeyId' : 'arn:aws:kms:"
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":key/"
+          - Ref: CAMKey
+          - "', "
+          - "'Body': ''"
+          - "},{ 'Bucket' : '"
+          - Ref: CAMConfigBucket
+          - "', "
+          - "'Key' : 'custom_policy/', "
+          - "'SSEKMSKeyId' : 'arn:aws:kms:"
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":key/"
+          - Ref: CAMKey
+          - "', "
+          - "'Body': ''"
+          - "}]"
+    Type: Custom::SolutionHelper
+  CAMKey:
+    Properties:
+      Description: Account Management CMK for S3 SSE-KMS
+      EnableKeyRotation: true
+      KeyPolicy:
+        Id: CrossAccountManager-key-1
+        Statement:
+        - Action:
+          - kms:*
+          Effect: Allow
+          Principal:
+            AWS:
+            - Fn::Join:
+              - ''
+              -
+                - 'arn:aws:iam::'
+                - Ref: AWS::AccountId
+                - :root
+          Resource: '*'
+          Sid: Enable IAM User Permissions
+        - Action:
+          - kms:Encrypt
+          - kms:Decrypt
+          - kms:ReEncrypt*
+          - kms:GenerateDataKey*
+          - kms:DescribeKey
+          Effect: Allow
+          Principal:
+            AWS:
+            - Fn::GetAtt:
+              - SolutionHelperRole
+              - Arn
+            - Fn::GetAtt:
+              - AccountFileHandlerExecRole
+              - Arn
+            - Fn::GetAtt:
+              - RoleFileHandlerExecRole
+              - Arn
+            - Fn::GetAtt:
+              - AccountEventHandlerExecRole
+              - Arn
+            - Fn::GetAtt:
+              - AccessLinksHandlerExecRole
+              - Arn
+          Resource: '*'
+          Sid: Allow use of the key
+        Version: '2012-10-17'
+    Type: AWS::KMS::Key
+  CAMKeyAlias:
+    Properties:
+      AliasName: alias/CrossAccountManager-Key
+      TargetKeyId:
+        Ref: CAMKey
+    Type: AWS::KMS::Alias
+  CloudwatchLogsCloudformationPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:logs:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - :log-group:/aws/lambda/*
+        - Action:
+          - cloudformation:DescribeStacks
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      PolicyName: Cloudwatch_Logs_Permissions
+      Roles:
+      - Ref: SolutionHelperRole
+      - Ref: AccountFileHandlerExecRole
+      - Ref: RoleFileHandlerExecRole
+      - Ref: AccessLinksHandlerExecRole
+      - Ref: AccountEventHandlerExecRole
+      - Ref: RoleEventHandlerExecRole
+      - Ref: InitMasterAccountExecRole
+    Type: AWS::IAM::Policy
+  CreateAccountRolesDDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: Role
+        AttributeType: S
+      - AttributeName: AccountId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Role
+        KeyType: HASH
+      - AttributeName: AccountId
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      TableName: CrossAccountManager-Account-Roles
+    Type: AWS::DynamoDB::Table
+  CreateAccountsDDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: AccountId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: AccountId
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      TableName: CrossAccountManager-Accounts
+    Type: AWS::DynamoDB::Table
+  CreateRolesDDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: Role
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Role
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      TableName: CrossAccountManager-Roles
+    Type: AWS::DynamoDB::Table
+  CreateUniqueID:
+    Properties:
+      CreateUniqueID: 'true'
+      Region:
+        Ref: AWS::Region
+      ServiceToken:
+        Fn::GetAtt:
+        - SolutionHelper
+        - Arn
+    Type: Custom::LoadLambda
+  IAMPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - iam:CreateRole
+          - iam:DeleteRole
+          - iam:GetRole
+          - iam:PutRolePolicy
+          - iam:DeleteRolePolicy
+          - iam:GetRolePolicy
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:iam:'
+              - ':'
+              - Ref: AWS::AccountId
+              - ':role/CrossAccountManager-*'
+        - Action:
+          - iam:ListRoles
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:iam:'
+              - ':'
+              - Ref: AWS::AccountId
+              - ':role/'
+        Version: '2012-10-17'
+      PolicyName: IAM_Permissions
+      Roles:
+      - Ref: AccountEventHandlerExecRole
+      - Ref: RoleEventHandlerExecRole
+      - Ref: RoleFileHandlerExecRole
+      - Ref: InitMasterAccountExecRole
+    Type: AWS::IAM::Policy
+  InitMasterAccount:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This Lambda function handles the Master Account initialization
+        and destruction logic
+      Handler: index.handleMasterAccountInit
+      Role:
+        Fn::GetAtt:
+        - InitMasterAccountExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '60'
+    Type: AWS::Lambda::Function
+  InitMasterAccountCustomResource:
+    DependsOn:
+    - CloudwatchLogsCloudformationPolicy
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - InitMasterAccount
+        - Arn
+    Type: Custom::InitMasterAccountCustomResource
+  InitMasterAccountExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+    Type: AWS::IAM::Role
+  RoleEventHandler:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This event-triggered Lambda function monitors Role Topic for Role
+        related activities e.g. onboarding, offboarding.
+      Handler: index.handleRoleEvent
+      Role:
+        Fn::GetAtt:
+        - RoleEventHandlerExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  RoleEventHandlerExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - sts:*
+            Effect: Allow
+            Resource:
+            - arn:aws:iam::*:role/CrossAccountManager-*
+          Version: '2012-10-17'
+        PolicyName: CrossAccountAccessPolicy
+      RoleName: CrossAccountManager-Admin-DO-NOT-DELETE
+    Type: AWS::IAM::Role
+  RoleEventHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - RoleEventHandler
+        - Arn
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: RoleTopic
+    Type: AWS::Lambda::Permission
+  RoleFileHandler:
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: cross-account-manager/v1/cross-account-handler.zip
+      Description: This event-triggered Lambda function monitors S3 bucket for Role
+        related activities e.g. onboarding, offboarding.
+      Handler: index.handleRoleS3File
+      Role:
+        Fn::GetAtt:
+        - RoleFileHandlerExecRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  RoleFileHandlerExecRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+    Type: AWS::IAM::Role
+  RoleFileHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - RoleFileHandler
+        - Arn
+      Principal: s3.amazonaws.com
+      SourceArn:
+        Fn::Join:
+        - ''
+        -
+          - 'arn:aws:s3:::'
+          - Ref: ConfigBucket
+    Type: AWS::Lambda::Permission
+  RoleTopic:
+    Properties:
+      DisplayName: CrossAccountManager-RoleTopic
+      Subscription:
+      - Endpoint:
+          Fn::GetAtt:
+          - RoleEventHandler
+          - Arn
+        Protocol: lambda
+      TopicName: CrossAccountManager-RoleTopic
+    Type: AWS::SNS::Topic
+  S3DynamoDBSNSPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:GetObject
+          - s3:DeleteObject
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              - Ref: CAMConfigBucket
+              - /
+              - '*'
+        - Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:Scan
+          Effect: Allow
+          Resource:
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:dynamodb:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - ':table/CrossAccountManager-*'
+        - Action:
+          - sns:AddPermission
+          - sns:RemovePermission
+          Effect: Allow
+          Resource:
+            Fn::Join:
+            - ''
+            -
+              - 'arn:aws:sns:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - ':CrossAccountManager-AccountTopic'
+        - Action:
+          - sns:Publish
+          Effect: Allow
+          Resource:
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:sns:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - ':CrossAccountManager-RoleTopic'
+          - Fn::Join:
+            - ''
+            -
+              - 'arn:aws:sns:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - ':CrossAccountManager-AccessLinksTopic'
+        Version: '2012-10-17'
+      PolicyName: S3_DynamoDB_SNS_Permissions
+      Roles:
+      - Ref: AccountFileHandlerExecRole
+      - Ref: RoleFileHandlerExecRole
+      - Ref: AccountEventHandlerExecRole
+      - Ref: RoleEventHandlerExecRole
+    Type: AWS::IAM::Policy
+  SendingAnonymousData:
+    Condition: SendData
+    Properties:
+      SendAnonymousData:
+        Fn::Join:
+        - ''
+        -
+          - "{ 'Solution' : '"
+          - "SO0015"
+          - "', "
+          - "'UUID' : '"
+          - Fn::GetAtt:
+            - CreateUniqueID
+            - UUID
+          - "', "
+          - "'Data': {"
+          - "'Version': '1'}"
+          - "}"
+      ServiceToken:
+        Fn::GetAtt:
+        - SolutionHelper
+        - Arn
+    Type: Custom::LoadLambda
+  SolutionHelper:
+    DependsOn: CloudwatchLogsCloudformationPolicy
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Join:
+          - ''
+          -
+            - solutions-
+            - Ref: AWS::Region
+        S3Key: library/solution-helper/v3/solution-helper.zip
+      Description: This function creates a CloudFormation custom lambda resource that
+        creates custom lambda functions by finding and replacing specific values from
+        existing lambda function code.
+      Handler: solution-helper.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - SolutionHelperRole
+        - Arn
+      Runtime: python2.7
+      Timeout: '300'
+    Type: AWS::Lambda::Function
+  SolutionHelperRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - s3:PutObject
+            - s3:PutBucketNotification
+            Effect: Allow
+            Resource:
+              Fn::Join:
+              - ''
+              -
+                - 'arn:aws:s3:::'
+                - Ref: CAMConfigBucket
+                - /*
+          Version: '2012-10-17'
+        PolicyName: S3_Permission
+    Type: AWS::IAM::Role

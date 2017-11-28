@@ -1,0 +1,8 @@
+Name,GivenName,Surname,SamAccountName,UserPrincipalName,Group
+Admin User,Admin,User,AdminUser,AdminUser@landingzone-op.aws,"AWS-Administrator"
+Power User,Power,User,PowerUser,PowerUser@landingzone-op.aws,"AWS-PowerUser"
+Dev User,Dev,User,DevUser,DevUser@landingzone-op.aws,"AWS-DevOps"
+Test User,Test,User,TestUser,TestUser@landingzone-op.aws,"AWS-DevOps"
+Noc User,Noc,User,NocUser,NocUser@landingzone-op.aws,"AWS-NetworkAdmin"
+DB User,Db,User,DBUser,DBUser@landingzone-op.aws,"AWS-DBAdmin"
+Read User,Read,User,ReadUser,ReadUser@landingzone-op.aws,"AWS-ReadOnly"

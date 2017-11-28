@@ -1,0 +1,106 @@
+Prerequisites:
+=============
+
+1. Create AWS CLI billing profile
+aws configure --profile billing
+
+
+Create AWS Organization and sub accounts:
+========================================
+
+1. Create an AWS organization
+aws organizations create-organization --feature-set ALL --region us-east-1 --profile billing
+
+2. Get the ID of the root of AWS Organization
+aws organizations list-roots --region us-east-1 --profile billing --query 'Roots[0].Id'
+
+3. Create an Organizational Unit
+aws organizations create-organizational-unit --region us-east-1 --profile billing --name <OU_NAME> --parent-id <ROOT_PARENT_ID>
+
+4. Get the list of Organizational Units under root organization
+aws organizations list-organizational-units-for-parent --region us-east-1 --profile billing --query 'OrganizationalUnits[*].{Id: Id, Name:Name}' --output table  --parent-id <ROOT_PARENT_ID>
+
+5. Create an AWS Account using AWS Organizations
+aws organizations create-account --role-name PayerAccountAccessRole --iam-user-access-to-billing ALLOW --region us-east-1 --profile billing --account-name <NAME_OF_THE_ACCOUNT> --email <UNIQUE_EMAIL_ID_FOR_ACCOUNT>
+
+6. Get the status of create account request
+aws organizations describe-create-account-status --region us-east-1 --profile billing --create-account-request-id <CREATE_ACCOUNT_REQUEST_ID>
+
+7. Get the list of AWS Accounts under an AWS Organizations
+aws organizations list-accounts --region us-east-1 --profile billing --query 'Accounts[*].{Name:Name,Email:Email,AccountId:Id}' --output table
+
+8. Move an account from one OU to another OU
+aws organizations move-account --region us-east-1 --profile billing --source-parent-id <ACCOUNTS_CURRENT_PARENT_ID> --destination-parent-id <OU_ID_TO_MOVE> --account-id <AWS_ACCOUNT_ID>
+
+9. Get the list of accounts under a specific OU
+aws organizations list-accounts-for-parent --region us-east-1 --profile billing --query 'Accounts[*].{Name:Name,Email:Email,Id:Id,Status:Status}' --output table --parent-id <OU_ID>
+
+
+Prepare accounts for CloudFormation StackSet:
+============================================
+
+1. Create a CloudFormation stack without any parameters and permission to create IAM role
+aws cloudformation create-stack --stack-name <STACK_NAME> --template-body file://<PATH_TO_TEMPLATE_FILE> --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --profile <AWS_CLI_PROFILE>
+
+2. Create a CloudFormation stack with parameters values and permission to create IAM role
+aws cloudformation create-stack --stack-name <STACK_NAME> --template-body file://<PATH_TO_TEMPLATE_FILE> --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --profile <AWS_CLI_PROFILE> --parameters ParameterKey=<PARAMETER_NAME_IN_TEMPLATE>,ParameterValue=<PARAMATER_VALUE_YOU_PROVIDE>
+
+3. Create a CloudFormation stack using parameters file and permission to create IAM role
+aws cloudformation create-stack --stack-name <STACK_NAME> --template-body file://<PATH_TO_TEMPLATE_FILE> --capabilities CAPABILITY_NAMED_IAM --region eu-west-1 --profile <AWS_CLI_PROFILE> --parameters file://<PATH_TO_PARAMETER_FILE>
+
+4. Get the list of events in a CloudFormation stack
+aws cloudformation describe-stack-events --region eu-west-1 --output table --query 'StackEvents[*].{LogicalId:LogicalResourceId, ResourceType: ResourceType, Status: ResourceStatus}' --profile <AWS_CLI_PROFILE> --stack-name <STACK_NAME>
+
+5. Get the list of resources in CloudFormation stack
+aws cloudformation describe-stack-resources --region eu-west-1 --query 'StackResources[*].{ResourceId: LogicalResourceId, Type: ResourceType, Status:ResourceStatus}' --output table --profile <AWS_CLI_PROFILE> --stack-name <STACK_NAME>
+
+6. Get the Outputs from CloudFormation stack.
+aws cloudformation describe-stacks --region eu-west-1 --query 'Stacks[0].Outputs[*].{Key:OutputKey, Value:OutputValue}' --output table --profile <AWS_CLI_PROFILE> --stack-name <STACK_NAME>
+
+7. Create EC2 Key Pair and store the private key in local file system
+aws ec2 create-key-pair --region eu-west-1 --query 'KeyMaterial' --output text --key-name <NAME_OF_KEY_PAIR> --profile <AWS_CLI_PROFILE> >> <PATH_TO_STORE>/<NAME_OF_KEY_PAIR>.pem
+
+
+Configure Config and CloudTrail on all accounts:
+===============================================
+
+1. Create CloudFormation StackSets
+aws cloudformation create-stack-set --stack-set-name <STACK_SET_NAME> --template-body file://<PATH_TO_TEMPLATE_FILE> --parameters file://<PATH_TO_PARAMETER_FILE> --region eu-west-1 --profile <AWS_CLI_PROFILE>
+
+2. Create CloudFormation stack instances using StackSet
+aws cloudformation create-stack-instances --stack-set-name <STACK_SET_NAME> --regions <LIST_OF_REGIONS_TO_LAUNCH_STACK_INSTANCES> --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=4 --region eu-west-1 --profile <AWS_CLI_PROFILE> --accounts <LIST_OF_AWS_ACCOUNT_ID>
+
+3. Get the list and status of stack instances created using StackSet
+aws cloudformation
+
+
+Configure trust relationship between AD on EC2 and AD on DS:
+===========================================================
+
+1. Get the list of Directories in AWS Directory Service
+aws ds describe-directories --region eu-west-1 --query 'DirectoryDescriptions[*].{ID:DirectoryId,Domain:Name}' --output table --profile <AWS_CLI_PROFILE>
+
+2. Create 2-way trust relationship in AWS Directory Service Microsoft AD
+aws ds create-trust --remote-domain-name <REMOTE_DOMAIN_TO_BE_TRUSTED> --trust-direction Two-Way --trust-type Forest --conditional-forwarder-ip-addrs <LIST_OF_DNS_IPs> --region eu-west-1 --profile <AWS_CLI_PROFILE> --directory-id <DIRECTORY_SERVICE_DIRECTORY_ID> --trust-password <TRUST_PASSWORD_FOR_REMOTE_DOMAIN_TRUST>
+
+3. Get the status of trust relationship in AWS Directory Service
+aws ds describe-trusts --region eu-west-1 --profile <AWS_CLI_PROFILE> --query 'Trusts[*].{TrustId:TrustId,State:TrustState}' --output table --directory-id <DIRECTORY_SERVICE_DIRECTORY_ID>
+
+
+Deploy and Configure Cross Account Manager:
+==========================================
+
+1. Get the AWS KMS Key ID using the Alias of the key
+aws kms list-aliases  --profile <AWS_CLI_PROFILE> --region eu-west-1 --query 'Aliases[?AliasName==`alias/<ALIAS_OF_KEY>`].{KMSKeyId:TargetKeyId}' --output text
+
+2. Upload objects to S3 with server side encryption using specific KMS key
+aws s3 cp <PATH_OF_FILE_TO_BE_COPIED>  s3://<S3_BUCKET_NAME>/<OPTIONAL_PATH_IN_S3_BUCKET> --sse aws:kms --sse-kms-key-id <KMS_KEY_ID> --region eu-west-1 --profile <AWS_CLI_PROFILE>
+
+3. List the objects in S3 bucket
+aws s3 ls s3://<S3_BUCKET_NAME>/<OPTIONAL_PATH_IN_S3_BUCKET> --region eu-west-1 --profile <AWS_CLI_PROFILE>
+
+4. List the tables in DynamoDB
+aws dynamodb list-tables --region eu-west-1 --profile <AWS_CLI_PROFILE>
+
+5. Scan the DynamoDB table for it's items
+aws dynamodb scan --table-name <TABLE_NAME> --region eu-west-1 --profile <AWS_CLI_PROFILE> --query 'Items[*]' --output table

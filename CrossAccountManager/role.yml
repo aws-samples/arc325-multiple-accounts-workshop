@@ -1,0 +1,27 @@
+roles:
+  -
+    #Role name
+    Administrator :
+       #Action add or remove
+       action : add
+       #Reference to JSON policy file in custom_policy folder
+       policy : Administrator.json
+       #Optional: apply this role to only accounts in this group
+    PowerUser :
+       action : add
+       policy : PowerUser.json
+    DevOps :
+       action : add
+       policy : DevOps.json
+       accountgroup : devops
+    NetworkAdmin :
+       action : add
+       policy : NetworkAdmin.json
+       accountgroup : devops
+    DBAdmin :
+       action : add
+       policy : DBAdmin.json
+       accountgroup : devops
+    ReadOnly :
+       action : add
+       policy : ReadOnly.json
