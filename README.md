@@ -7,9 +7,9 @@ Modules|DependsOn|Expected Time
 [Prerequisites](docs/prerequisites.md)|N/A|5 Minutes
 [Create AWS Organization and sub accounts](docs/create-orgs.md)|Prerequisites|10 Minutes
 [Create Active Directory for SSO](docs/lz-ad-sso.md)|Create AWS Organization and sub accounts|5 Minutes
-[Configure Centralized Logging](docs/centralized-logging.md)|Create AWS Organization and sub accounts|5 Minutes
 [Prepare accounts for CloudFormation StackSet](docs/cfn-stackset-prepare.md)|Create AWS Organization and sub accounts|10 Minutes
 [Configure Config and CloudTrail on all accounts](docs/security-baseline.md)|Prepare accounts for CloudFormation StackSet|15 Minutes
+[Configure Centralized Logging](docs/centralized-logging.md)|Configure Config and CloudTrail on all accounts|5 Minutes  
 [Configure trust relationship between AD on EC2 and AD on DS](docs/configure-trust-relationship.md)|Create Active Directory for SSO|15 Minutes
 [Deploy and Configure Cross Account Manager](docs/cross-account-manager.md)|Configure trust relationship between AD on EC2 and AD on DS|20 Minutes
 [Enable and configure VPC Flow logs](docs/configure-vpc-flow-logs.md) (Optional)|Configure Centralized Logging|10 Minutes
