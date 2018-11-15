@@ -261,7 +261,7 @@ Resources:
         Type: AWS::Logs::MetricFilter
         Properties:
             LogGroupName: !Ref rCloudTrailLogGroup
-            FilterPattern: '{($.eventSource = cloudtrail.amazonaws.com) && (($.eventName != Describe*) && ($.eventName != Get*) && ($.eventName != Lookup*) && ($.eventName != Lookup*))}'
+            FilterPattern: '{($.eventSource = cloudtrail.amazonaws.com) && (($.eventName != Describe*) && ($.eventName != Get*) && ($.eventName != Lookup*) && ($.eventName != ListTags*))}'
             MetricTransformations:
               - MetricNamespace: CloudTrailMetrics
                 MetricName: CloudTrailChangeCount
