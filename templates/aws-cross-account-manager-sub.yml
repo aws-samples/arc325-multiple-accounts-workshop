@@ -85,7 +85,7 @@ Resources:
         Fn::GetAtt:
         - InitSubAccountExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '60'
     Type: AWS::Lambda::Function
   InitSubAccountCustomResource:

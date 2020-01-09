@@ -82,7 +82,7 @@ Resources:
         Fn::GetAtt:
         - AccessLinksHandlerExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '300'
     Type: AWS::Lambda::Function
   AccessLinksHandlerExecRole:
@@ -169,7 +169,7 @@ Resources:
         Fn::GetAtt:
         - AccountEventHandlerExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '300'
     Type: AWS::Lambda::Function
   AccountEventHandlerExecRole:
@@ -211,7 +211,7 @@ Resources:
         Fn::GetAtt:
         - AccountFileHandlerExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '300'
     Type: AWS::Lambda::Function
   AccountFileHandlerExecRole:
@@ -630,7 +630,7 @@ Resources:
         Fn::GetAtt:
         - InitMasterAccountExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '60'
     Type: AWS::Lambda::Function
   InitMasterAccountCustomResource:
@@ -671,7 +671,7 @@ Resources:
         Fn::GetAtt:
         - RoleEventHandlerExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '300'
     Type: AWS::Lambda::Function
   RoleEventHandlerExecRole:
@@ -725,7 +725,7 @@ Resources:
         Fn::GetAtt:
         - RoleFileHandlerExecRole
         - Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
       Timeout: '300'
     Type: AWS::Lambda::Function
   RoleFileHandlerExecRole:
